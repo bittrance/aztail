@@ -1,6 +1,9 @@
 use anyhow::{anyhow, Result};
-use chrono::{DateTime, FixedOffset};
+use chrono::{DateTime, FixedOffset, Local};
+use chrono_english::{parse_date_string, Dialect};
 use clap::Parser;
+#[cfg(test)]
+use spectral::prelude::*;
 use std::ffi::OsString;
 
 #[derive(Debug, Parser)]
@@ -17,7 +20,9 @@ pub struct Opts {
 }
 
 fn parse_ts(input: &str) -> Result<DateTime<FixedOffset>> {
-    DateTime::parse_from_rfc3339(input).map_err(|e| anyhow!(e))
+    DateTime::parse_from_rfc3339(input)
+        .or_else(|_| parse_date_string(input, Local::now().into(), Dialect::Us))
+        .map_err(|e| anyhow!(e))
 }
 
 pub fn cli_opts<I, T>(args: I) -> Result<Opts>
@@ -59,4 +64,11 @@ fn cli_options_end_time_and_follow_incompatible() {
     let args = base_args().chain(vec!["-e", "2021-10-31T23:55:00+00:00", "-f"]);
     let res = cli_opts(args);
     assert!(format!("{:?}", res.unwrap_err()).contains("--end-time or --follow"));
+}
+
+#[test]
+fn colloquial_end_time() {
+    let args = base_args().chain(vec!["--end-time=-20m"]);
+    let res = cli_opts(args);
+    assert_that(&res).is_ok().map(|o| &o.end_time).is_some();
 }
