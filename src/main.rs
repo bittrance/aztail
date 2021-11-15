@@ -1,55 +1,35 @@
+use anyhow::{anyhow, Result};
 use azure_identity::token_credentials::AzureCliCredential;
 use azure_svc_applicationinsights::{models::QueryBody, operations::query};
-use clap::Parser;
+use chrono::{DateTime, FixedOffset};
 use serde_json::{map::Map, to_string_pretty, value::Value};
-use std::future::Future;
-use std::time::{Duration, Instant};
-use tokio::time::sleep;
+use std::time::Duration;
+use thiserror::Error;
 
 const ENDPOINT: &str = "https://api.applicationinsights.io";
 
+mod options;
 mod queries;
+mod util;
 
-#[derive(Parser)]
-#[clap(version = "1.0")]
-struct Opts {
-    #[clap(long)]
-    app_id: String,
-    #[clap(long)]
-    query: String,
-    timespan: Option<String>,
+#[derive(Error, Debug)]
+pub enum AzTailError {
+    #[error("No more entries")]
+    Break,
 }
 
-async fn repeater<T, F, E, Fut>(interval: Duration, initial: T, work: F) -> E
-where
-    F: Fn(T) -> Fut,
-    Fut: Future<Output = Result<T, E>>,
-{
-    let mut value = initial;
-    loop {
-        let next_repetition = Instant::now() + interval;
-        match work(value).await {
-            Ok(v) => value = v,
-            Err(err) => return err,
-        }
-        if Instant::now() < next_repetition {
-            sleep(next_repetition - Instant::now()).await;
-        }
-    }
-}
-
-fn present_row(row: Map<String, Value>) {
-    println!("{}", to_string_pretty(&row).unwrap());
+fn present_row(row: &Map<String, Value>) {
+    println!("{}", to_string_pretty(row).unwrap());
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let opts = Opts::parse();
+    let opts = options::cli_opts(std::env::args())?;
 
-    let query = QueryBody {
-        query: opts.query,
-        timespan: opts.timespan,
-        applications: None,
+    let query = queries::QueryParams {
+        item_type: "traces".to_owned(),
+        start_time: opts.start_time,
+        end_time: opts.end_time,
     };
 
     let base_path = format!("{}/v1", ENDPOINT);
@@ -59,9 +39,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .base_path(base_path)
         .token_credential_resource(ENDPOINT)
         .build();
-    let querier = |query| async {
-        let response = query::execute(&config, &opts.app_id, &query).await?;
+    let querier = |mut query| async {
+        let body = QueryBody {
+            query: queries::build_query(&query),
+            timespan: None,
+            applications: None,
+        };
+        let response = query::execute(&config, &opts.app_id, &body).await?;
         let unnamed = "unnamed".to_string();
+        let mut last_message_ts = None::<DateTime<FixedOffset>>;
         for table in response.tables {
             for row in table.rows.as_array().unwrap().iter() {
                 let fields = table
@@ -70,43 +56,31 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .map(|c| c.name.as_ref().unwrap_or_else(|| &unnamed));
                 let values = row.as_array().unwrap();
                 let m: Map<String, Value> = fields.cloned().zip(values.iter().cloned()).collect();
-                present_row(m);
+                present_row(&m);
+                if let Some(ts) = m
+                    .get("timestamp")
+                    .map(|v| DateTime::parse_from_rfc3339(v.as_str().unwrap()).unwrap())
+                {
+                    last_message_ts = match last_message_ts {
+                        None => Some(ts),
+                        Some(prev_ts) if ts > prev_ts => Some(ts),
+                        Some(prev_ts) => Some(prev_ts),
+                    }
+                }
             }
         }
-        Ok::<_, query::execute::Error>(query)
+        if last_message_ts.is_none() {
+            // TODO: We should not follow beyond query.end_time
+            if opts.follow {
+                return Ok(query);
+            }
+            Err(anyhow!(AzTailError::Break))
+        } else {
+            query.start_time = last_message_ts;
+            Ok(query)
+        }
     };
-    let err = repeater(Duration::from_secs(5), query, querier).await;
-    println!("{:?}", err);
+    let err = util::repeater(Duration::from_secs(10), query, querier).await;
+    eprintln!("Failed {:?}", err);
     Ok(())
-}
-
-#[tokio::test]
-async fn test_repeater() {
-    let start = Instant::now();
-    let res = repeater(Duration::from_millis(20), 0, |mut counter| async move {
-        counter += 1;
-        if counter == 5 {
-            return Err(counter);
-        }
-        Ok(counter)
-    })
-    .await;
-    assert_eq!(res, 5);
-    assert!(Instant::now() - start > Duration::from_millis(80));
-    assert!(Instant::now() - start < Duration::from_millis(150));
-}
-
-#[tokio::test]
-async fn test_repeater_slow_worker() {
-    let start = Instant::now();
-    repeater(Duration::from_millis(5), 0, |mut counter| async move {
-        sleep(Duration::from_millis(20)).await;
-        counter += 1;
-        if counter == 5 {
-            return Err(counter);
-        }
-        Ok(counter)
-    })
-    .await;
-    assert!(Instant::now() - start > Duration::from_millis(80));
 }
