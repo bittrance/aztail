@@ -6,15 +6,21 @@ use clap::Parser;
 use spectral::prelude::*;
 use std::ffi::OsString;
 
+/// Query the "traces" table in a App Insights or Log Analytics workspace
+/// and presents the log entries.
 #[derive(Debug, Parser)]
 #[clap(version = "1.0")]
 pub struct Opts {
+    /// The UUID of the App Insight or Log Analytics workspace where logs reside
     #[clap(long)]
     pub app_id: String,
+    /// Retrieve logs newer than this. Can be RFC3339 or informal such as "yesterday"
     #[clap(short, long, parse(try_from_str = parse_ts))]
     pub start_time: Option<DateTime<FixedOffset>>,
+    /// Retrieve logs older than this. Can be RFC3339 or informal such as "30min ago"
     #[clap(short, long, parse(try_from_str = parse_ts))]
     pub end_time: Option<DateTime<FixedOffset>>,
+    /// Tail a log query. Incompatible with --end-time
     #[clap(short, long)]
     pub follow: bool,
 }
