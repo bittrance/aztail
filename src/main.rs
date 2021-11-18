@@ -22,15 +22,34 @@ fn present_row(row: &Map<String, Value>) {
     println!("{}", to_string_pretty(row).unwrap());
 }
 
+fn build_operators(opts: &options::Opts) -> Vec<Box<dyn queries::Operator>> {
+    let mut operators: Vec<Box<dyn queries::Operator>> = Vec::new();
+    if opts.start_time.is_some() || opts.end_time.is_some() {
+        operators.push(Box::new(queries::TimespanFilter::new(
+            opts.start_time,
+            opts.end_time,
+        )));
+    }
+    if opts.app.is_some() {
+        operators.push(Box::new(queries::SimpleFieldFilter::new(
+            "cloud_RoleName".to_owned(),
+            opts.app.clone().unwrap(),
+        )))
+    }
+    if opts.operation.is_some() {
+        operators.push(Box::new(queries::SimpleFieldFilter::new(
+            "operation_Name".to_owned(),
+            opts.operation.clone().unwrap(),
+        )))
+    }
+    operators
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let opts = options::cli_opts(std::env::args())?;
 
-    let query = queries::QueryParams {
-        item_type: "traces".to_owned(),
-        start_time: opts.start_time,
-        end_time: opts.end_time,
-    };
+    let operators = build_operators(&opts);
 
     let base_path = format!("{}/v1", ENDPOINT);
     let http_client = azure_core::new_http_client();
@@ -39,9 +58,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .base_path(base_path)
         .token_credential_resource(ENDPOINT)
         .build();
-    let querier = |mut query| async {
+    let querier = |mut operators: Vec<Box<dyn queries::Operator + 'static>>| async {
         let body = QueryBody {
-            query: queries::build_query(&query),
+            query: queries::tabular_expression("traces", &operators),
             timespan: None,
             applications: None,
         };
@@ -69,18 +88,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
         }
-        if last_message_ts.is_none() {
-            // TODO: We should not follow beyond query.end_time
-            if opts.follow {
-                return Ok(query);
+        if opts.follow {
+            if last_message_ts.is_some() {
+                operators[0]
+                    .as_any()
+                    .downcast_mut::<queries::TimespanFilter>()
+                    .unwrap()
+                    .advance_start(last_message_ts);
             }
-            Err(anyhow!(AzTailError::Break))
+            Ok(operators)
         } else {
-            query.start_time = last_message_ts;
-            Ok(query)
+            Err(anyhow!(AzTailError::Break))
         }
     };
-    let err = util::repeater(Duration::from_secs(10), query, querier).await;
+    let err = util::repeater(Duration::from_secs(10), operators, querier).await;
     eprintln!("Failed {:?}", err);
     Ok(())
 }

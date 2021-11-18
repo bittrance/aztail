@@ -20,6 +20,12 @@ pub struct Opts {
     /// Retrieve logs older than this. Can be RFC3339 or informal such as "30min ago"
     #[clap(short, long, parse(try_from_str = parse_ts))]
     pub end_time: Option<DateTime<FixedOffset>>,
+    /// Show only logs for a specific app
+    #[clap(short, long)]
+    pub app: Option<String>,
+    /// Show only logs for a specific function
+    #[clap(short, long)]
+    pub operation: Option<String>,
     /// Tail a log query. Incompatible with --end-time
     #[clap(short, long)]
     pub follow: bool,
