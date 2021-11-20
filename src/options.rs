@@ -46,7 +46,7 @@ where
     if opts.end_time.is_some() && opts.follow {
         return Err(anyhow!("Please use --end-time or --follow, but not both"));
     }
-    return Ok(opts);
+    Ok(opts)
 }
 
 #[cfg(test)]

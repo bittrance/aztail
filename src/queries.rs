@@ -73,12 +73,6 @@ impl Operator for SimpleFieldFilter {
 #[derive(Debug)]
 pub struct Ordering;
 
-impl Ordering {
-    pub fn new() -> Self {
-        Ordering
-    }
-}
-
 impl Operator for Ordering {
     fn to_term(&self) -> String {
         " | sort by timestamp asc".to_string()

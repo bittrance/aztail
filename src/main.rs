@@ -72,7 +72,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let fields = table
                     .columns
                     .iter()
-                    .map(|c| c.name.as_ref().unwrap_or_else(|| &unnamed));
+                    .map(|c| c.name.as_ref().unwrap_or(&unnamed));
                 let values = row.as_array().unwrap();
                 let m: Map<String, Value> = fields.cloned().zip(values.iter().cloned()).collect();
                 present_row(&m);
