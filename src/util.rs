@@ -33,7 +33,7 @@ async fn test_repeater() {
     .await;
     assert_eq!(res, 5);
     assert!(Instant::now() - start > Duration::from_millis(80));
-    assert!(Instant::now() - start < Duration::from_millis(150));
+    assert!(Instant::now() - start < Duration::from_millis(500));
 }
 
 #[tokio::test]
