@@ -4,13 +4,13 @@ aztail supports App Insights and Log Analytics. Its purpose is to extract logs a
 
 **Current status**: aztail is early-phase software: it works, but is feature poor.
 
-## Authentication
-
-aztail does not itself handle authentication, but expect you to have used e.g. `az login` and `az account set` to provide it with a session.
-
 ## Install
 
 aztail is a single binary and can be downloaded from the repository [release page](https://github.com/bittrance/aztail/releases). aztail currently supports MacOS X, Linux and Windows x86-64.
+
+## Authentication
+
+aztail does not itself handle authentication, but expect you to have used e.g. `az login` and `az account set` to provide it with a session.
 
 ## Usage
 
