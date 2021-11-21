@@ -2,13 +2,15 @@ use anyhow::{anyhow, Result};
 use azure_identity::token_credentials::AzureCliCredential;
 use azure_svc_applicationinsights::{models::QueryBody, operations::query};
 use chrono::{DateTime, FixedOffset};
-use serde_json::{map::Map, to_string_pretty, value::Value};
+use serde_json::{map::Map, value::Value};
+use std::io::stdout;
 use std::time::Duration;
 use thiserror::Error;
 
 const ENDPOINT: &str = "https://api.applicationinsights.io";
 
 mod options;
+mod output;
 mod queries;
 mod util;
 
@@ -16,10 +18,15 @@ mod util;
 pub enum AzTailError {
     #[error("No more entries")]
     Break,
+    #[error("Invalid output format: {0}")]
+    InvalidOutputFormat(String),
 }
 
-fn present_row(row: &Map<String, Value>) {
-    println!("{}", to_string_pretty(row).unwrap());
+fn present_row(row: &Map<String, Value>, opts: &options::Opts) -> Result<()> {
+    match opts.format {
+        options::OutputFormat::Json => output::render_pretty_json(row),
+        options::OutputFormat::Text => output::render_text_line(row, &mut stdout(), opts),
+    }
 }
 
 fn build_operators(opts: &options::Opts) -> Vec<Box<dyn queries::Operator>> {
@@ -74,9 +81,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .iter()
                     .map(|c| c.name.as_ref().unwrap_or(&unnamed));
                 let values = row.as_array().unwrap();
-                let m: Map<String, Value> = fields.cloned().zip(values.iter().cloned()).collect();
-                present_row(&m);
-                if let Some(ts) = m
+                let row: Map<String, Value> = fields.cloned().zip(values.iter().cloned()).collect();
+                present_row(&row, &opts)?;
+                if let Some(ts) = row
                     .get("timestamp")
                     .map(|v| DateTime::parse_from_rfc3339(v.as_str().unwrap()).unwrap())
                 {

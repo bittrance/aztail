@@ -1,6 +1,6 @@
 use chrono::prelude::*;
 #[cfg(test)]
-use spectral::prelude::*;
+use speculoos::prelude::*;
 use std::any::Any;
 use std::fmt::Debug;
 
@@ -122,7 +122,7 @@ fn field_filter() {
 fn build_expression() {
     let operators: Vec<Box<dyn Operator>> = vec![
         Box::new(SimpleFieldFilter::new("foo".to_owned(), "bar".to_owned())),
-        Box::new(Ordering::new()),
+        Box::new(Ordering),
     ];
     let query = tabular_expression("traces", &operators);
     assert_that(&query)

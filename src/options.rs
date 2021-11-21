@@ -1,10 +1,32 @@
+use crate::AzTailError;
 use anyhow::{anyhow, Result};
 use chrono::{DateTime, FixedOffset, Local};
 use chrono_english::{parse_date_string, Dialect};
 use clap::Parser;
 #[cfg(test)]
-use spectral::prelude::*;
+use speculoos::prelude::*;
 use std::ffi::OsString;
+use std::str::FromStr;
+
+#[derive(Debug)]
+pub enum OutputFormat {
+    Text,
+    Json,
+}
+
+impl FromStr for OutputFormat {
+    type Err = super::AzTailError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let lower = s.to_lowercase();
+        if lower == "text" {
+            Ok(OutputFormat::Text)
+        } else if lower == "json" {
+            Ok(OutputFormat::Json)
+        } else {
+            Err(AzTailError::InvalidOutputFormat(lower))
+        }
+    }
+}
 
 /// Query the "traces" table in a App Insights or Log Analytics workspace
 /// and presents the log entries.
@@ -29,6 +51,9 @@ pub struct Opts {
     /// Tail a log query. Incompatible with --end-time
     #[clap(short, long)]
     pub follow: bool,
+    /// One of text, json
+    #[clap(long, default_value = "text")]
+    pub format: OutputFormat,
 }
 
 fn parse_ts(input: &str) -> Result<DateTime<FixedOffset>> {
@@ -50,7 +75,7 @@ where
 }
 
 #[cfg(test)]
-fn base_args() -> impl Iterator<Item = &'static str> {
+pub fn base_args() -> impl Iterator<Item = &'static str> {
     vec![
         "aztail",
         "--app-id",
