@@ -1,0 +1,8 @@
+{
+  "name": "log-function",
+  "type": "module",
+  "version": "0.5.0",
+  "description": "Azure Function App for example logging.",
+  "author": "bittrance@gmail.com",
+  "license": "MIT"
+}

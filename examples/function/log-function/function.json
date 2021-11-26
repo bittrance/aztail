@@ -1,0 +1,10 @@
+{
+  "bindings": [
+    {
+      "name": "logFunctionTrigger",
+      "type": "timerTrigger",
+      "direction": "in",
+      "schedule": "0 * * * * *"
+    }
+  ]
+}
