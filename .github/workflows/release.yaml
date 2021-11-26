@@ -19,10 +19,12 @@ jobs:
           toolchain: stable
       - run: cargo clippy
       - run: cargo build --release
-      - if: runner.os == 'Windows'
-        run: mv target/release/aztail.exe target/release/aztail-windows.exe
-      - if: runner.os != 'Windows'
-        run: mv target/release/aztail target/release/aztail-${RUNNER_OS}
+      - if: matrix.os == 'ubuntu-latest'
+        run: mv target/release/aztail target/release/aztail-x86_64-unknown-linux-gnu
+      - if: matrix.os == 'windows-latest'
+        run: mv target/release/aztail.exe target/release/aztail-x86_64-pc-windows-msvc.exe
+      - if: matrix.os == 'macos-latest'
+        run: mv target/release/aztail target/release/aztail-x86_64-apple-darwin
       - uses: softprops/action-gh-release@v1
         with:
           fail_on_unmatched_files: false
