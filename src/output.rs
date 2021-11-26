@@ -1,16 +1,30 @@
 use crate::options::Opts;
 use anyhow::Result;
 use chrono::DateTime;
+use colored::{Color, Colorize};
 use serde_json::{map::Map, to_string_pretty, value::Value};
 use std::io::Write;
 
-fn value_as_bytes(value: Option<&Value>) -> &[u8] {
-    value.unwrap().as_str().unwrap().as_bytes()
+fn unwrap_as_str(value: Option<&Value>) -> &str {
+    value.unwrap().as_str().unwrap()
 }
 
 fn readable_timestamp(value: Option<&Value>) -> String {
     let timestamp = DateTime::parse_from_rfc3339(value.and_then(|v| v.as_str()).unwrap()).unwrap();
     timestamp.format("%Y-%m-%d %H:%M:%S%.3fZ").to_string()
+}
+
+fn message_color(row: &Map<String, Value>) -> Option<Color> {
+    let severity = row.get("severityLevel").unwrap().as_i64();
+    if severity == Some(1) {
+        None
+    } else if severity == Some(2) {
+        Some(Color::Yellow)
+    } else if severity >= Some(3) {
+        Some(Color::BrightRed)
+    } else {
+        Some(Color::Magenta)
+    }
 }
 
 pub fn render_pretty_json(row: &Map<String, Value>) -> Result<()> {
@@ -22,24 +36,37 @@ pub fn render_text_line<T>(row: &Map<String, Value>, output: &mut T, opts: &Opts
 where
     T: Write,
 {
-    output.write_all(readable_timestamp(row.get("timestamp")).as_bytes())?;
-    output.write_all("  ".as_bytes())?;
+    write!(
+        output,
+        "{}  ",
+        readable_timestamp(row.get("timestamp")).green()
+    )?;
     if opts.app.is_none() {
-        output.write_all(value_as_bytes(row.get("cloud_RoleName")))?;
-        output.write_all("  ".as_bytes())?;
+        write!(
+            output,
+            "{}  ",
+            unwrap_as_str(row.get("cloud_RoleName")).magenta()
+        )?;
     }
     if opts.operation.is_none() {
-        output.write_all(value_as_bytes(row.get("operation_Name")))?;
-        output.write_all("  ".as_bytes())?;
+        write!(
+            output,
+            "{}  ",
+            unwrap_as_str(row.get("operation_Name")).cyan()
+        )?;
     }
-    output.write_all(value_as_bytes(row.get("message")))?;
-    output.write_all("\n".as_bytes())?;
+    let message = match message_color(row) {
+        Some(color) => unwrap_as_str(row.get("message")).color(color),
+        None => unwrap_as_str(row.get("message")).clear(),
+    };
+    writeln!(output, "{}", message)?;
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use crate::options::{base_args, cli_opts};
+    use colored::Colorize;
     use serde_json::json;
     use serde_json::{map::Map, value::Value};
     use speculoos::prelude::*;
@@ -50,6 +77,7 @@ mod tests {
             "cloud_RoleName": "ze-app",
             "operation_Name": "ze-operation",
             "message": "ze-message",
+            "severityLevel": 1,
         })
         .as_object()
         .unwrap()
@@ -81,5 +109,16 @@ mod tests {
         let mut output: Vec<u8> = Vec::new();
         super::render_text_line(&row(), &mut output, &opts).unwrap();
         assert_that(&String::from_utf8(output).unwrap()).does_not_contain("ze-app");
+    }
+
+    #[test]
+    fn logs_have_color() {
+        let mut entry = row();
+        entry.insert("severityLevel".to_owned(), json!(2));
+        let opts = cli_opts(base_args()).unwrap();
+        let mut output: Vec<u8> = Vec::new();
+        super::render_text_line(&entry, &mut output, &opts).unwrap();
+        let res = String::from_utf8(output).unwrap();
+        assert_that(&res).contains(&format!("{}", "ze-message".yellow()).as_ref());
     }
 }
