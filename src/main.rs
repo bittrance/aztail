@@ -56,6 +56,8 @@ fn build_operators(opts: &options::Opts) -> Vec<Box<dyn queries::Operator>> {
 #[tokio::main]
 async fn main() -> Result<()> {
     let opts = options::cli_opts(std::env::args())?;
+    #[cfg(windows)]
+    colored::control::set_virtual_terminal(true).unwrap();
 
     let operators = build_operators(&opts);
 
