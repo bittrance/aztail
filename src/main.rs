@@ -14,7 +14,7 @@ mod output;
 mod queries;
 mod util;
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum AzTailError {
     #[error("No more entries")]
     Break,
@@ -54,7 +54,7 @@ fn build_operators(opts: &options::Opts) -> Vec<Box<dyn queries::Operator>> {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<()> {
     let opts = options::cli_opts(std::env::args())?;
 
     let operators = build_operators(&opts);
@@ -109,9 +109,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Err(anyhow!(AzTailError::Break))
         }
     };
-    let err = util::repeater(Duration::from_secs(10), operators, querier).await;
-    eprintln!("Failed {:?}", err);
-    Ok(())
+    match util::repeater(Duration::from_secs(10), operators, querier).await {
+        ref err
+            if err
+                .downcast_ref::<AzTailError>()
+                .filter(|e| e == &&AzTailError::Break)
+                .is_some() =>
+        {
+            Ok(())
+        }
+        err => Err(err),
+    }
 }
 
 #[cfg(test)]
