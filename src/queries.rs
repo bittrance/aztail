@@ -6,7 +6,8 @@ use std::fmt::Debug;
 
 pub trait Operator: Any + Debug {
     fn to_term(&self) -> String;
-    fn as_any(&mut self) -> &mut dyn Any;
+    fn as_any(&self) -> &dyn Any;
+    fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 
 #[derive(Debug)]
@@ -43,7 +44,11 @@ impl Operator for TimespanFilter {
         op
     }
 
-    fn as_any(&mut self) -> &mut dyn Any {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
         self
     }
 }
@@ -65,7 +70,11 @@ impl Operator for SimpleFieldFilter {
         format!(" | where {} == '{}'", self.field, self.value)
     }
 
-    fn as_any(&mut self) -> &mut dyn Any {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
         self
     }
 }
@@ -78,7 +87,11 @@ impl Operator for Ordering {
         " | sort by timestamp asc".to_string()
     }
 
-    fn as_any(&mut self) -> &mut dyn Any {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
         self
     }
 }

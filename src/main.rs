@@ -49,6 +49,7 @@ fn build_operators(opts: &options::Opts) -> Vec<Box<dyn queries::Operator>> {
             opts.operation.clone().unwrap(),
         )))
     }
+    operators.push(Box::new(queries::Ordering {}));
     operators
 }
 
@@ -98,7 +99,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         if opts.follow {
             if last_message_ts.is_some() {
                 operators[0]
-                    .as_any()
+                    .as_any_mut()
                     .downcast_mut::<queries::TimespanFilter>()
                     .unwrap()
                     .advance_start(last_message_ts);
@@ -111,4 +112,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let err = util::repeater(Duration::from_secs(10), operators, querier).await;
     eprintln!("Failed {:?}", err);
     Ok(())
+}
+
+#[cfg(test)]
+mod test {
+    use crate::options::{base_args, cli_opts};
+    use crate::queries::Ordering;
+    use speculoos::prelude::*;
+
+    #[test]
+    fn last_operator_is_ordering() {
+        let opts = cli_opts(base_args()).unwrap();
+        let res = super::build_operators(&opts);
+        let ordering_pos = res.iter().position(|o| o.as_any().is::<Ordering>());
+        assert_that(&ordering_pos)
+            .is_some()
+            .is_equal_to(res.len() - 1);
+    }
 }
