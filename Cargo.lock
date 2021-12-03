@@ -53,6 +53,7 @@ name = "aztail"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "azure_core",
  "azure_identity",
  "azure_svc_applicationinsights",
@@ -69,7 +70,7 @@ dependencies = [
 [[package]]
 name = "azure_core"
 version = "0.1.0"
-source = "git+https://github.com/Azure/azure-sdk-for-rust#0a9ef64ff17316b2684e9ec92d49628261266edb"
+source = "git+https://github.com/Azure/azure-sdk-for-rust?rev=0a9ef64f#0a9ef64ff17316b2684e9ec92d49628261266edb"
 dependencies = [
  "async-trait",
  "base64",
@@ -95,7 +96,7 @@ dependencies = [
 [[package]]
 name = "azure_identity"
 version = "0.1.0"
-source = "git+https://github.com/Azure/azure-sdk-for-rust#0a9ef64ff17316b2684e9ec92d49628261266edb"
+source = "git+https://github.com/Azure/azure-sdk-for-rust?rev=0a9ef64f#0a9ef64ff17316b2684e9ec92d49628261266edb"
 dependencies = [
  "async-timer",
  "async-trait",
@@ -114,7 +115,7 @@ dependencies = [
 [[package]]
 name = "azure_svc_applicationinsights"
 version = "0.1.0"
-source = "git+https://github.com/Azure/azure-sdk-for-rust#0a9ef64ff17316b2684e9ec92d49628261266edb"
+source = "git+https://github.com/Azure/azure-sdk-for-rust?rev=0a9ef64f#0a9ef64ff17316b2684e9ec92d49628261266edb"
 dependencies = [
  "azure_core",
  "bytes",

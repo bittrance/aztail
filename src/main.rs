@@ -9,6 +9,8 @@ use thiserror::Error;
 
 const ENDPOINT: &str = "https://api.applicationinsights.io";
 
+mod appinsights;
+mod loganalytics;
 mod options;
 mod output;
 mod queries;
