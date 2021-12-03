@@ -4,7 +4,7 @@ use speculoos::prelude::*;
 use std::any::Any;
 use std::fmt::Debug;
 
-pub trait Operator: Any + Debug {
+pub trait Operator: Any + Debug + Send + Sync {
     fn to_term(&self) -> String;
     fn as_any(&self) -> &dyn Any;
     fn as_any_mut(&mut self) -> &mut dyn Any;

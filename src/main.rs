@@ -1,16 +1,12 @@
 use anyhow::{anyhow, Result};
-use azure_identity::token_credentials::AzureCliCredential;
-use azure_svc_applicationinsights::{models::QueryBody, operations::query};
+use appinsights::LogSource;
 use chrono::{DateTime, FixedOffset};
 use serde_json::{map::Map, value::Value};
 use std::io::stdout;
 use std::time::Duration;
 use thiserror::Error;
 
-const ENDPOINT: &str = "https://api.applicationinsights.io";
-
 mod appinsights;
-mod loganalytics;
 mod options;
 mod output;
 mod queries;
@@ -62,32 +58,12 @@ async fn main() -> Result<()> {
     colored::control::set_virtual_terminal(true).unwrap();
 
     let operators = build_operators(&opts);
-
-    let base_path = format!("{}/v1", ENDPOINT);
-    let http_client = azure_core::new_http_client();
-    let token_credential = Box::new(AzureCliCredential {});
-    let config = azure_svc_applicationinsights::config(http_client, token_credential)
-        .base_path(base_path)
-        .token_credential_resource(ENDPOINT)
-        .build();
+    let log_source = appinsights::AppInsights::new(&opts);
     let querier = |mut operators: Vec<Box<dyn queries::Operator + 'static>>| async {
-        let body = QueryBody {
-            query: queries::tabular_expression("traces", &operators),
-            timespan: None,
-            applications: None,
-        };
-        let response = query::execute(&config, &opts.app_id, &body).await?;
-        let unnamed = "unnamed".to_string();
         let mut last_message_ts = None::<DateTime<FixedOffset>>;
-        for table in response.tables {
-            for row in table.rows.as_array().unwrap().iter() {
-                let fields = table
-                    .columns
-                    .iter()
-                    .map(|c| c.name.as_ref().unwrap_or(&unnamed));
-                let values = row.as_array().unwrap();
-                let row: Map<String, Value> = fields.cloned().zip(values.iter().cloned()).collect();
-                present_row(&row, &opts)?;
+        let log_entries = log_source.query(&operators).await?;
+        log_entries
+            .inspect(|row| {
                 if let Some(ts) = row
                     .get("timestamp")
                     .map(|v| DateTime::parse_from_rfc3339(v.as_str().unwrap()).unwrap())
@@ -98,8 +74,8 @@ async fn main() -> Result<()> {
                         Some(prev_ts) => Some(prev_ts),
                     }
                 }
-            }
-        }
+            })
+            .try_for_each(|row| present_row(&row, &opts))?;
         if opts.follow {
             if last_message_ts.is_some() {
                 operators[0]
