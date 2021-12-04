@@ -23,7 +23,7 @@ resource "azurerm_application_insights" "application_insights" {
   name                = "aztail-function"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
-  workspace_id        = azurerm_log_analytics_workspace.logs.workspace_id
+  workspace_id        = azurerm_log_analytics_workspace.logs.id
   application_type    = "Node.JS"
 }
 
@@ -39,6 +39,7 @@ resource "azurerm_function_app" "function_app" {
     "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.application_insights.instrumentation_key,
     "FUNCTIONS_WORKER_RUNTIME"       = "node",
     "WEBSITE_RUN_FROM_PACKAGE"       = "",
+    "WEBSITE_MOUNT_ENABLED"          = "1",
   }
 
   os_type = "linux"
