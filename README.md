@@ -1,12 +1,14 @@
 # aztail - cli to retrieve Azure logs
 
-aztail supports App Insights and Log Analytics. Its purpose is to extract logs and to allow tailing logs, with an eye to assisting development and operation of Azure Functions. It is inspired by [awslogs](https://github.com/jorgebastida/awslogs).
+aztail supports App Insights and Azure Monitor Logs (also known as Log Analytics). Its purpose is to extract logs and to allow tailing logs, with an eye to assisting development and operation of Azure Functions. It is inspired by [awslogs](https://github.com/jorgebastida/awslogs).
 
 **Current status**: aztail is early-phase software: it works, but is feature poor.
 
+See the [sources](./examples/README.md) page for details on exactly what services aztail supports and which fields are used.
+
 ## Install
 
-aztail is a single binary and can be downloaded from the repository [release page](https://github.com/bittrance/aztail/releases). aztail currently supports MacOS X, Linux and Windows x86-64.
+aztail is a single binary and can be downloaded from the repository [release page](https://github.com/bittrance/aztail/releases). aztail currently supports MacOS X, Linux and Windows x86-64. https://aka.ms/installazurecliwindows
 
 ## Authentication
 
