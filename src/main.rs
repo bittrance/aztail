@@ -58,10 +58,11 @@ async fn main() -> Result<()> {
     colored::control::set_virtual_terminal(true).unwrap();
 
     let operators = build_operators(&opts);
+    let query = queries::Query::new("traces".to_owned(), operators);
     let log_source = appinsights::AppInsights::new(&opts);
-    let querier = |mut operators: Vec<Box<dyn queries::Operator + 'static>>| async {
+    let querier = |mut query: queries::Query| async {
         let mut last_message_ts = None::<DateTime<FixedOffset>>;
-        let log_entries = log_source.query(&operators).await?;
+        let log_entries = log_source.query(&query).await?;
         log_entries
             .inspect(|row| {
                 if let Some(ts) = row
@@ -78,18 +79,14 @@ async fn main() -> Result<()> {
             .try_for_each(|row| present_row(&row, &opts))?;
         if opts.follow {
             if last_message_ts.is_some() {
-                operators[0]
-                    .as_any_mut()
-                    .downcast_mut::<queries::TimespanFilter>()
-                    .unwrap()
-                    .advance_start(last_message_ts);
+                query.advance_start(last_message_ts);
             }
-            Ok(operators)
+            Ok(query)
         } else {
             Err(anyhow!(AzTailError::Break))
         }
     };
-    match util::repeater(Duration::from_secs(10), operators, querier).await {
+    match util::repeater(Duration::from_secs(10), query, querier).await {
         ref err
             if err
                 .downcast_ref::<AzTailError>()

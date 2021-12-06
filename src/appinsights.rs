@@ -1,5 +1,5 @@
 use crate::options::Opts;
-use crate::queries::{tabular_expression, Operator};
+use crate::queries::Query;
 use anyhow::Result;
 use async_trait::async_trait;
 use azure_identity::token_credentials::AzureCliCredential;
@@ -12,10 +12,7 @@ const ENDPOINT: &str = "https://api.applicationinsights.io";
 
 #[async_trait]
 pub trait LogSource {
-    async fn query<I>(&self, operators: I) -> Result<Box<dyn Iterator<Item = Map<String, Value>>>>
-    where
-        I: IntoIterator + Send,
-        I::Item: AsRef<dyn Operator>;
+    async fn query(&self, query: &Query) -> Result<Box<dyn Iterator<Item = Map<String, Value>>>>;
 }
 
 pub struct AppInsights<'a> {
@@ -38,13 +35,9 @@ impl<'a> AppInsights<'a> {
 
 #[async_trait]
 impl<'a> LogSource for AppInsights<'a> {
-    async fn query<I>(&self, operators: I) -> Result<Box<dyn Iterator<Item = Map<String, Value>>>>
-    where
-        I: IntoIterator + Send,
-        I::Item: AsRef<dyn Operator>,
-    {
+    async fn query(&self, query: &Query) -> Result<Box<dyn Iterator<Item = Map<String, Value>>>> {
         let body = QueryBody {
-            query: tabular_expression("traces", operators),
+            query: query.tabular_expression(),
             timespan: None,
             applications: None,
         };

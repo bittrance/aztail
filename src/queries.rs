@@ -4,6 +4,46 @@ use speculoos::prelude::*;
 use std::any::Any;
 use std::fmt::Debug;
 
+pub struct Query {
+    table: String,
+    timespan_pos: Option<usize>,
+    operators: Vec<Box<dyn Operator>>,
+}
+
+impl Query {
+    pub fn new(table: String, operators: Vec<Box<dyn Operator>>) -> Self {
+        let timespan_pos = operators
+            .iter()
+            .position(|o| o.as_any().is::<TimespanFilter>());
+        Query {
+            table,
+            timespan_pos,
+            operators,
+        }
+    }
+
+    pub fn tabular_expression(&self) -> String {
+        let mut expr = self.table.to_owned();
+        expr.push_str(
+            &self
+                .operators
+                .iter()
+                .map(|o| o.to_term())
+                .collect::<String>(),
+        );
+        expr
+    }
+
+    pub fn advance_start(&mut self, start_time: Option<DateTime<FixedOffset>>) {
+        let pos = self.timespan_pos.expect("Internal error");
+        self.operators[pos]
+            .as_any_mut()
+            .downcast_mut::<TimespanFilter>()
+            .unwrap()
+            .advance_start(start_time);
+    }
+}
+
 pub trait Operator: Any + Debug + Send + Sync {
     fn to_term(&self) -> String;
     fn as_any(&self) -> &dyn Any;
@@ -96,19 +136,28 @@ impl Operator for Ordering {
     }
 }
 
-pub fn tabular_expression<I>(source: &str, operators: I) -> String
-where
-    I: IntoIterator,
-    I::Item: AsRef<dyn Operator>,
-{
-    let mut expr = source.to_owned();
-    expr.push_str(
-        &operators
-            .into_iter()
-            .map(|o| o.as_ref().to_term())
-            .collect::<String>(),
+#[test]
+fn basic_query_tabular_expression() {
+    let operators: Vec<Box<dyn Operator>> = vec![
+        Box::new(SimpleFieldFilter::new("foo".to_owned(), "bar".to_owned())),
+        Box::new(Ordering),
+    ];
+    let query = Query::new("traces".to_owned(), operators);
+    assert_that(&query.tabular_expression())
+        .is_equal_to("traces | where foo == 'bar' | sort by timestamp asc".to_owned());
+}
+
+#[test]
+fn query_advance_start_time() {
+    let operators: Vec<Box<dyn Operator>> = vec![Box::new(TimespanFilter::new(
+        "2021-10-19T21:44:01.10Z".parse().ok(),
+        None,
+    ))];
+    let mut query = Query::new("traces".to_owned(), operators);
+    query.advance_start("2021-10-19T21:45:01.99Z".parse().ok());
+    assert_that(&query.tabular_expression()).is_equal_to(
+        "traces | where timestamp > datetime(2021-10-19T21:45:01.990+00:00)".to_owned(),
     );
-    expr
 }
 
 #[test]
@@ -129,15 +178,4 @@ fn timespan_endtime() {
 fn field_filter() {
     let filter = SimpleFieldFilter::new("op".to_owned(), "ze-op".to_owned());
     assert_that(&filter.to_term()).is_equal_to(" | where op == 'ze-op'".to_owned());
-}
-
-#[test]
-fn build_expression() {
-    let operators: Vec<Box<dyn Operator>> = vec![
-        Box::new(SimpleFieldFilter::new("foo".to_owned(), "bar".to_owned())),
-        Box::new(Ordering),
-    ];
-    let query = tabular_expression("traces", &operators);
-    assert_that(&query)
-        .is_equal_to("traces | where foo == 'bar' | sort by timestamp asc".to_owned());
 }
