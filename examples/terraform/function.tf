@@ -19,8 +19,8 @@ resource "azurerm_app_service_plan" "app_service_plan" {
   }
 }
 
-resource "azurerm_application_insights" "application_insights" {
-  name                = "aztail-function"
+resource "azurerm_application_insights" "function_insights" {
+  name                = "aztail-function-appinsights"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
   workspace_id        = azurerm_log_analytics_workspace.logs.id
@@ -36,7 +36,7 @@ resource "azurerm_function_app" "function_app" {
   storage_account_access_key = azurerm_storage_account.storage_account.primary_access_key
   app_service_plan_id        = azurerm_app_service_plan.app_service_plan.id
   app_settings = {
-    "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.application_insights.instrumentation_key,
+    "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.function_insights.instrumentation_key,
     "FUNCTIONS_WORKER_RUNTIME"       = "node",
     "WEBSITE_RUN_FROM_PACKAGE"       = "",
     "WEBSITE_MOUNT_ENABLED"          = "1",

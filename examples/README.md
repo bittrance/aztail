@@ -36,6 +36,24 @@ Resources:
 
 - [Container group and instance logging with Azure Monitor logs](https://docs.microsoft.com/en-us/azure/container-instances/container-instances-log-analytics)
 
+## API Management on Application Insights
+
+| Datum     | Field                                                                 |
+| --------- | --------------------------------------------------------------------- |
+| Table     | requests                                                              |
+| Timestamp | timestamp                                                             |
+| Group     | customDimensions."API Name"                                           |
+| Unit      | customDimensions."Operation Name"                                     |
+| Message   | Apache-style with url, resultCode, customMeasurements."Response Size" |
+
+| Datum     | Field                            |
+| --------- | -------------------------------- |
+| Table     | exceptions                       |
+| Timestamp | timestamp                        |
+| Group     | cloud_RoleName starts with "{}." |
+| Unit      | -                                |
+| Message   | outerMessage + operation_Name    |
+
 ## Logic App
 
 | Datum     | Field                    |
