@@ -59,10 +59,10 @@ async fn main() -> Result<()> {
 
     let operators = build_operators(&opts);
     let query = queries::Query::new("traces".to_owned(), operators);
-    let log_source = appinsights::AppInsights::new(&opts);
-    let querier = |mut query: queries::Query| async {
+    let log_source: Box<dyn LogSource> = Box::new(appinsights::AppInsights::new(query, &opts));
+    let querier = |mut source: Box<dyn LogSource>| async {
         let mut last_message_ts = None::<DateTime<FixedOffset>>;
-        let log_entries = log_source.query(&query).await?;
+        let log_entries = source.stream().await?;
         log_entries
             .inspect(|row| {
                 if let Some(ts) = row
@@ -79,14 +79,14 @@ async fn main() -> Result<()> {
             .try_for_each(|row| present_row(&row, &opts))?;
         if opts.follow {
             if last_message_ts.is_some() {
-                query.advance_start(last_message_ts);
+                source.get_query_mut().advance_start(last_message_ts);
             }
-            Ok(query)
+            Ok(source)
         } else {
             Err(anyhow!(AzTailError::Break))
         }
     };
-    match util::repeater(Duration::from_secs(10), query, querier).await {
+    match util::repeater(Duration::from_secs(10), log_source, querier).await {
         ref err
             if err
                 .downcast_ref::<AzTailError>()

@@ -12,16 +12,18 @@ const ENDPOINT: &str = "https://api.applicationinsights.io";
 
 #[async_trait]
 pub trait LogSource {
-    async fn query(&self, query: &Query) -> Result<Box<dyn Iterator<Item = Map<String, Value>>>>;
+    async fn stream(&self) -> Result<Box<dyn Iterator<Item = Map<String, Value>>>>;
+    fn get_query_mut(&mut self) -> &mut Query;
 }
 
 pub struct AppInsights<'a> {
     config: OperationConfig,
+    query: Query,
     opts: &'a Opts,
 }
 
 impl<'a> AppInsights<'a> {
-    pub fn new(opts: &'a Opts) -> Self {
+    pub fn new(query: Query, opts: &'a Opts) -> Self {
         let base_path = format!("{}/v1", ENDPOINT);
         let http_client = azure_core::new_http_client();
         let token_credential = Box::new(AzureCliCredential {});
@@ -29,15 +31,19 @@ impl<'a> AppInsights<'a> {
             .base_path(base_path)
             .token_credential_resource(ENDPOINT)
             .build();
-        AppInsights { config, opts }
+        AppInsights {
+            config,
+            query,
+            opts,
+        }
     }
 }
 
 #[async_trait]
 impl<'a> LogSource for AppInsights<'a> {
-    async fn query(&self, query: &Query) -> Result<Box<dyn Iterator<Item = Map<String, Value>>>> {
+    async fn stream(&self) -> Result<Box<dyn Iterator<Item = Map<String, Value>>>> {
         let body = QueryBody {
-            query: query.tabular_expression(),
+            query: self.query.tabular_expression(),
             timespan: None,
             applications: None,
         };
@@ -67,5 +73,9 @@ impl<'a> LogSource for AppInsights<'a> {
             })
             .flatten();
         Ok(Box::new(log_entries))
+    }
+
+    fn get_query_mut(&mut self) -> &mut Query {
+        &mut self.query
     }
 }
