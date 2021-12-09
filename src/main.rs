@@ -63,20 +63,19 @@ async fn main() -> Result<()> {
     let querier = |mut source: Box<dyn LogSource>| async {
         let mut last_message_ts = None::<DateTime<FixedOffset>>;
         let log_entries = source.stream().await?;
-        log_entries
-            .inspect(|row| {
-                if let Some(ts) = row
-                    .get("timestamp")
-                    .map(|v| DateTime::parse_from_rfc3339(v.as_str().unwrap()).unwrap())
-                {
-                    last_message_ts = match last_message_ts {
-                        None => Some(ts),
-                        Some(prev_ts) if ts > prev_ts => Some(ts),
-                        Some(prev_ts) => Some(prev_ts),
-                    }
+        for row in log_entries {
+            if let Some(ts) = row
+                .get("timestamp")
+                .map(|v| DateTime::parse_from_rfc3339(v.as_str().unwrap()).unwrap())
+            {
+                last_message_ts = match last_message_ts {
+                    None => Some(ts),
+                    Some(prev_ts) if ts > prev_ts => Some(ts),
+                    Some(prev_ts) => Some(prev_ts),
                 }
-            })
-            .try_for_each(|row| present_row(&row, &opts))?;
+            }
+            present_row(&row, &opts)?;
+        }
         if opts.follow {
             if last_message_ts.is_some() {
                 source.get_query_mut().advance_start(last_message_ts);
