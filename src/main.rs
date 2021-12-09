@@ -2,7 +2,9 @@ use anyhow::{anyhow, Result};
 use appinsights::LogSource;
 use chrono::{DateTime, FixedOffset};
 use serde_json::{map::Map, value::Value};
+use std::future::Future;
 use std::io::stdout;
+use std::pin::Pin;
 use std::time::Duration;
 use thiserror::Error;
 
@@ -51,6 +53,39 @@ fn build_operators(opts: &options::Opts) -> Vec<Box<dyn queries::Operator>> {
     operators
 }
 
+fn querier_factory(
+    opts: options::Opts,
+) -> impl Fn(Box<dyn LogSource>) -> Pin<Box<dyn Future<Output = Result<Box<dyn LogSource>>>>> {
+    move |mut source: Box<dyn LogSource>| {
+        let opts = opts.clone();
+        Box::pin(async move {
+            let mut last_message_ts = None::<DateTime<FixedOffset>>;
+            let log_entries = source.stream().await?;
+            for row in log_entries {
+                if let Some(ts) = row
+                    .get("timestamp")
+                    .map(|v| DateTime::parse_from_rfc3339(v.as_str().unwrap()).unwrap())
+                {
+                    last_message_ts = match last_message_ts {
+                        None => Some(ts),
+                        Some(prev_ts) if ts > prev_ts => Some(ts),
+                        Some(prev_ts) => Some(prev_ts),
+                    }
+                }
+                present_row(&row, &opts)?;
+            }
+            if opts.follow {
+                if last_message_ts.is_some() {
+                    source.get_query_mut().advance_start(last_message_ts);
+                }
+                Ok(source)
+            } else {
+                Err(anyhow!(AzTailError::Break))
+            }
+        })
+    }
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     let opts = options::cli_opts(std::env::args())?;
@@ -59,32 +94,9 @@ async fn main() -> Result<()> {
 
     let operators = build_operators(&opts);
     let query = queries::Query::new("traces".to_owned(), operators);
-    let log_source: Box<dyn LogSource> = Box::new(appinsights::AppInsights::new(query, &opts));
-    let querier = |mut source: Box<dyn LogSource>| async {
-        let mut last_message_ts = None::<DateTime<FixedOffset>>;
-        let log_entries = source.stream().await?;
-        for row in log_entries {
-            if let Some(ts) = row
-                .get("timestamp")
-                .map(|v| DateTime::parse_from_rfc3339(v.as_str().unwrap()).unwrap())
-            {
-                last_message_ts = match last_message_ts {
-                    None => Some(ts),
-                    Some(prev_ts) if ts > prev_ts => Some(ts),
-                    Some(prev_ts) => Some(prev_ts),
-                }
-            }
-            present_row(&row, &opts)?;
-        }
-        if opts.follow {
-            if last_message_ts.is_some() {
-                source.get_query_mut().advance_start(last_message_ts);
-            }
-            Ok(source)
-        } else {
-            Err(anyhow!(AzTailError::Break))
-        }
-    };
+    let log_source: Box<dyn LogSource> =
+        Box::new(appinsights::AppInsights::new(query, opts.clone()));
+    let querier = querier_factory(opts.clone());
     match util::repeater(Duration::from_secs(10), log_source, querier).await {
         ref err
             if err

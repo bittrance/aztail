@@ -8,7 +8,7 @@ use speculoos::prelude::*;
 use std::ffi::OsString;
 use std::str::FromStr;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum OutputFormat {
     Text,
     Json,
@@ -30,7 +30,7 @@ impl FromStr for OutputFormat {
 
 /// Query the "traces" table in a App Insights or Log Analytics workspace
 /// and presents the log entries.
-#[derive(Debug, Parser)]
+#[derive(Clone, Debug, Parser)]
 #[clap(version = "1.0")]
 pub struct Opts {
     /// The UUID of the App Insight or Log Analytics workspace where logs reside

@@ -16,14 +16,14 @@ pub trait LogSource {
     fn get_query_mut(&mut self) -> &mut Query;
 }
 
-pub struct AppInsights<'a> {
+pub struct AppInsights {
     config: OperationConfig,
     query: Query,
-    opts: &'a Opts,
+    opts: Opts,
 }
 
-impl<'a> AppInsights<'a> {
-    pub fn new(query: Query, opts: &'a Opts) -> Self {
+impl AppInsights {
+    pub fn new(query: Query, opts: Opts) -> Self {
         let base_path = format!("{}/v1", ENDPOINT);
         let http_client = azure_core::new_http_client();
         let token_credential = Box::new(AzureCliCredential {});
@@ -40,7 +40,7 @@ impl<'a> AppInsights<'a> {
 }
 
 #[async_trait]
-impl<'a> LogSource for AppInsights<'a> {
+impl LogSource for AppInsights {
     async fn stream(&self) -> Result<Box<dyn Iterator<Item = Map<String, Value>>>> {
         let body = QueryBody {
             query: self.query.tabular_expression(),
