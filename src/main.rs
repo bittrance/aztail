@@ -1,10 +1,8 @@
+use crate::output::{ColorTextPresenter, Presenter, PrettyJsonPresenter};
 use anyhow::{anyhow, Result};
 use appinsights::LogSource;
 use chrono::{DateTime, FixedOffset};
-use serde_json::{map::Map, value::Value};
-use std::future::Future;
 use std::io::stdout;
-use std::pin::Pin;
 use std::time::Duration;
 use thiserror::Error;
 
@@ -22,10 +20,12 @@ pub enum AzTailError {
     InvalidOutputFormat(String),
 }
 
-fn present_row(row: &Map<String, Value>, opts: &options::Opts) -> Result<()> {
+fn build_presenter(opts: &options::Opts) -> Box<dyn Presenter> {
     match opts.format {
-        options::OutputFormat::Json => output::render_pretty_json(row),
-        options::OutputFormat::Text => output::render_text_line(row, &mut stdout(), opts),
+        options::OutputFormat::Json => Box::new(PrettyJsonPresenter {}) as Box<dyn Presenter>,
+        options::OutputFormat::Text => {
+            Box::new(ColorTextPresenter::new(stdout(), opts)) as Box<dyn Presenter>
+        }
     }
 }
 
@@ -53,36 +53,31 @@ fn build_operators(opts: &options::Opts) -> Vec<Box<dyn queries::Operator>> {
     operators
 }
 
-fn querier_factory(
-    opts: options::Opts,
-) -> impl Fn(Box<dyn LogSource>) -> Pin<Box<dyn Future<Output = Result<Box<dyn LogSource>>>>> {
-    move |mut source: Box<dyn LogSource>| {
-        let opts = opts.clone();
-        Box::pin(async move {
-            let mut last_message_ts = None::<DateTime<FixedOffset>>;
-            let log_entries = source.stream().await?;
-            for row in log_entries {
-                if let Some(ts) = row
-                    .get("timestamp")
-                    .map(|v| DateTime::parse_from_rfc3339(v.as_str().unwrap()).unwrap())
-                {
-                    last_message_ts = match last_message_ts {
-                        None => Some(ts),
-                        Some(prev_ts) if ts > prev_ts => Some(ts),
-                        Some(prev_ts) => Some(prev_ts),
-                    }
-                }
-                present_row(&row, &opts)?;
+type QuerierArgs = (Box<dyn LogSource>, Box<dyn output::Presenter>, bool);
+
+async fn querier((mut source, presenter, follow): QuerierArgs) -> Result<QuerierArgs> {
+    let mut last_message_ts = None::<DateTime<FixedOffset>>;
+    let log_entries = source.stream().await?;
+    for row in log_entries {
+        if let Some(ts) = row
+            .get("timestamp")
+            .map(|v| DateTime::parse_from_rfc3339(v.as_str().unwrap()).unwrap())
+        {
+            last_message_ts = match last_message_ts {
+                None => Some(ts),
+                Some(prev_ts) if ts > prev_ts => Some(ts),
+                Some(prev_ts) => Some(prev_ts),
             }
-            if opts.follow {
-                if last_message_ts.is_some() {
-                    source.get_query_mut().advance_start(last_message_ts);
-                }
-                Ok(source)
-            } else {
-                Err(anyhow!(AzTailError::Break))
-            }
-        })
+        }
+        presenter.present(&row)?;
+    }
+    if follow {
+        if last_message_ts.is_some() {
+            source.get_query_mut().advance_start(last_message_ts);
+        }
+        Ok((source, presenter, follow))
+    } else {
+        Err(anyhow!(AzTailError::Break))
     }
 }
 
@@ -96,8 +91,14 @@ async fn main() -> Result<()> {
     let query = queries::Query::new("traces".to_owned(), operators);
     let log_source: Box<dyn LogSource> =
         Box::new(appinsights::AppInsights::new(query, opts.clone()));
-    let querier = querier_factory(opts.clone());
-    match util::repeater(Duration::from_secs(10), log_source, querier).await {
+    let presenter = build_presenter(&opts);
+    match util::repeater(
+        Duration::from_secs(10),
+        (log_source, presenter, opts.follow),
+        querier,
+    )
+    .await
+    {
         ref err
             if err
                 .downcast_ref::<AzTailError>()
