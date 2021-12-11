@@ -23,7 +23,7 @@ impl Query {
     }
 
     pub fn tabular_expression(&self) -> String {
-        let mut expr = self.table.to_owned();
+        let mut expr = self.table.clone();
         expr.push_str(
             &self
                 .operators

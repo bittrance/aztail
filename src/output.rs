@@ -15,7 +15,7 @@ fn unwrap_as_str(value: Option<&Value>) -> &str {
 }
 
 fn readable_timestamp(value: Option<&Value>) -> String {
-    let timestamp = DateTime::parse_from_rfc3339(value.and_then(|v| v.as_str()).unwrap()).unwrap();
+    let timestamp = DateTime::parse_from_rfc3339(value.and_then(Value::as_str).unwrap()).unwrap();
     timestamp.format("%Y-%m-%d %H:%M:%S%.3fZ").to_string()
 }
 

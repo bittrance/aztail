@@ -41,13 +41,13 @@ fn build_operators(opts: &options::Opts) -> Vec<Box<dyn queries::Operator>> {
         operators.push(Box::new(queries::SimpleFieldFilter::new(
             "cloud_RoleName".to_owned(),
             opts.app.clone().unwrap(),
-        )))
+        )));
     }
     if opts.operation.is_some() {
         operators.push(Box::new(queries::SimpleFieldFilter::new(
             "operation_Name".to_owned(),
             opts.operation.clone().unwrap(),
-        )))
+        )));
     }
     operators.push(Box::new(queries::Ordering {}));
     operators

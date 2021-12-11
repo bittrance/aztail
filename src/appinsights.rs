@@ -48,30 +48,26 @@ impl LogSource for AppInsights {
             applications: None,
         };
         let response = query::execute(&self.config, &self.opts.app_id, &body).await?;
-        let log_entries = response
-            .tables
-            .into_iter()
-            .map(|table| {
-                let fields: Vec<String> = table
-                    .columns
-                    .into_iter()
-                    .map(|c| c.name.unwrap_or_else(|| "unnamed".to_string()))
-                    .collect();
-                table
-                    .rows
-                    .as_array()
-                    .cloned()
-                    .unwrap()
-                    .into_iter()
-                    .map(move |row| {
-                        fields
-                            .clone()
-                            .into_iter()
-                            .zip(row.as_array().cloned().unwrap())
-                            .collect::<Map<String, Value>>()
-                    })
-            })
-            .flatten();
+        let log_entries = response.tables.into_iter().flat_map(|table| {
+            let fields: Vec<String> = table
+                .columns
+                .into_iter()
+                .map(|c| c.name.unwrap_or_else(|| "unnamed".to_string()))
+                .collect();
+            table
+                .rows
+                .as_array()
+                .cloned()
+                .unwrap()
+                .into_iter()
+                .map(move |row| {
+                    fields
+                        .clone()
+                        .into_iter()
+                        .zip(row.as_array().cloned().unwrap())
+                        .collect::<Map<String, Value>>()
+                })
+        });
         Ok(Box::new(log_entries))
     }
 
