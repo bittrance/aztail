@@ -1,7 +1,6 @@
 use crate::output::{ColorTextPresenter, Presenter, PrettyJsonPresenter};
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use appinsights::LogSource;
-use chrono::{DateTime, FixedOffset};
 use std::io::stdout;
 use std::time::Duration;
 use thiserror::Error;
@@ -9,7 +8,10 @@ use thiserror::Error;
 mod appinsights;
 mod options;
 mod output;
+mod querier;
 mod queries;
+#[cfg(test)]
+mod testing;
 mod util;
 
 #[derive(Error, Debug, PartialEq)]
@@ -53,34 +55,6 @@ fn build_operators(opts: &options::Opts) -> Vec<Box<dyn queries::Operator>> {
     operators
 }
 
-type QuerierArgs = (Box<dyn LogSource>, Box<dyn output::Presenter>, bool);
-
-async fn querier((mut source, presenter, follow): QuerierArgs) -> Result<QuerierArgs> {
-    let mut last_message_ts = None::<DateTime<FixedOffset>>;
-    let log_entries = source.stream().await?;
-    for row in log_entries {
-        if let Some(ts) = row
-            .get("timestamp")
-            .map(|v| DateTime::parse_from_rfc3339(v.as_str().unwrap()).unwrap())
-        {
-            last_message_ts = match last_message_ts {
-                None => Some(ts),
-                Some(prev_ts) if ts > prev_ts => Some(ts),
-                Some(prev_ts) => Some(prev_ts),
-            }
-        }
-        presenter.present(&row)?;
-    }
-    if follow {
-        if last_message_ts.is_some() {
-            source.get_query_mut().advance_start(last_message_ts);
-        }
-        Ok((source, presenter, follow))
-    } else {
-        Err(anyhow!(AzTailError::Break))
-    }
-}
-
 #[tokio::main]
 async fn main() -> Result<()> {
     let opts = options::cli_opts(std::env::args())?;
@@ -95,7 +69,7 @@ async fn main() -> Result<()> {
     match util::repeater(
         Duration::from_secs(10),
         (log_source, presenter, opts.follow),
-        querier,
+        querier::querier,
     )
     .await
     {

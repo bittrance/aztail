@@ -35,12 +35,21 @@ impl Query {
     }
 
     pub fn advance_start(&mut self, start_time: Option<DateTime<FixedOffset>>) {
-        let pos = self.timespan_pos.expect("Internal error");
+        let pos = self.timespan_pos.expect("No timespan filter in query");
         self.operators[pos]
             .as_any_mut()
             .downcast_mut::<TimespanFilter>()
             .unwrap()
             .advance_start(start_time);
+    }
+
+    #[cfg(test)]
+    pub fn peek_timespan(
+        &self,
+    ) -> Option<(Option<DateTime<FixedOffset>>, Option<DateTime<FixedOffset>>)> {
+        self.timespan_pos
+            .and_then(|p| self.operators[p].as_any().downcast_ref::<TimespanFilter>())
+            .map(|filter| (filter.start_time, filter.end_time))
     }
 }
 

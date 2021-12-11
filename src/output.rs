@@ -91,9 +91,9 @@ mod tests {
     use super::ColorTextPresenter;
     use crate::options::{base_args, cli_opts};
     use crate::output::Presenter;
+    use crate::testing::row;
     use colored::Colorize;
     use serde_json::json;
-    use serde_json::{map::Map, value::Value};
     use speculoos::prelude::*;
 
     struct WriterWrapper {
@@ -108,19 +108,6 @@ mod tests {
         fn flush(&mut self) -> std::io::Result<()> {
             self.buf.borrow_mut().flush()
         }
-    }
-
-    fn row() -> Map<String, Value> {
-        json!({
-            "timestamp": "2021-11-20T06:18:30+00:00",
-            "cloud_RoleName": "ze-app",
-            "operation_Name": "ze-operation",
-            "message": "ze-message",
-            "severityLevel": 1,
-        })
-        .as_object()
-        .unwrap()
-        .clone()
     }
 
     #[test]
