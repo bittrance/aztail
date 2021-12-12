@@ -3,8 +3,6 @@ use anyhow::{anyhow, Result};
 use chrono::{DateTime, FixedOffset, Local};
 use chrono_english::{parse_date_string, Dialect};
 use clap::Parser;
-#[cfg(test)]
-use speculoos::prelude::*;
 use std::ffi::OsString;
 use std::str::FromStr;
 
@@ -75,37 +73,32 @@ where
 }
 
 #[cfg(test)]
-pub fn base_args() -> impl Iterator<Item = &'static str> {
-    vec![
-        "aztail",
-        "--app-id",
-        "ze-app",
-        "-s",
-        "2021-10-31T23:50:00+00:00",
-    ]
-    .into_iter()
-}
+mod test {
+    use crate::{options::cli_opts, testing::base_args};
+    use chrono::DateTime;
+    use speculoos::prelude::*;
 
-#[test]
-fn cli_options_minimum_working() {
-    let res = cli_opts(base_args()).expect("parsing failed");
-    assert_eq!(
-        res.start_time,
-        Some(DateTime::parse_from_rfc3339("2021-10-31T23:50:00+00:00").unwrap())
-    );
-    assert_eq!(res.app_id, "ze-app");
-}
+    #[test]
+    fn cli_options_minimum_working() {
+        let res = cli_opts(base_args()).expect("parsing failed");
+        assert_eq!(
+            res.start_time,
+            Some(DateTime::parse_from_rfc3339("2021-10-31T23:50:00+00:00").unwrap())
+        );
+        assert_eq!(res.app_id, "ze-app");
+    }
 
-#[test]
-fn cli_options_end_time_and_follow_incompatible() {
-    let args = base_args().chain(vec!["-e", "2021-10-31T23:55:00+00:00", "-f"]);
-    let res = cli_opts(args);
-    assert!(format!("{:?}", res.unwrap_err()).contains("--end-time or --follow"));
-}
+    #[test]
+    fn cli_options_end_time_and_follow_incompatible() {
+        let args = base_args().chain(vec!["-e", "2021-10-31T23:55:00+00:00", "-f"]);
+        let res = cli_opts(args);
+        assert!(format!("{:?}", res.unwrap_err()).contains("--end-time or --follow"));
+    }
 
-#[test]
-fn colloquial_end_time() {
-    let args = base_args().chain(vec!["--end-time=-20m"]);
-    let res = cli_opts(args);
-    assert_that(&res).is_ok().map(|o| &o.end_time).is_some();
+    #[test]
+    fn colloquial_end_time() {
+        let args = base_args().chain(vec!["--end-time=-20m"]);
+        let res = cli_opts(args);
+        assert_that(&res).is_ok().map(|o| &o.end_time).is_some();
+    }
 }

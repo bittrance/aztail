@@ -80,7 +80,7 @@ mod tests {
     use std::rc::Rc;
 
     use super::ColorTextPresenter;
-    use crate::options::{base_args, cli_opts};
+    use crate::options::cli_opts;
     use crate::output::Presenter;
     use crate::source::appinsights_row_to_entry;
     use crate::testing::*;
@@ -108,7 +108,7 @@ mod tests {
         let buf = Rc::new(RefCell::new(Vec::new()));
         let output = WriterWrapper { buf: buf.clone() };
         let presenter = ColorTextPresenter::new(output, &opts);
-        presenter.present(&row(T1)).unwrap();
+        presenter.present(&log_entry(T1)).unwrap();
         let res = String::from_utf8(buf.take()).unwrap();
         assert_that(&res).contains("ze-app");
         assert_that(&res).contains("ze-operation");
@@ -121,7 +121,7 @@ mod tests {
         let buf = Rc::new(RefCell::new(Vec::new()));
         let output = WriterWrapper { buf: buf.clone() };
         let presenter = ColorTextPresenter::new(output, &opts);
-        presenter.present(&row(T1)).unwrap();
+        presenter.present(&log_entry(T1)).unwrap();
         assert_that(&String::from_utf8(buf.take()).unwrap()).does_not_contain("ze-operation");
     }
 
@@ -131,7 +131,7 @@ mod tests {
         let buf = Rc::new(RefCell::new(Vec::new()));
         let output = WriterWrapper { buf: buf.clone() };
         let presenter = ColorTextPresenter::new(output, &opts);
-        presenter.present(&row(T1)).unwrap();
+        presenter.present(&log_entry(T1)).unwrap();
         assert_that(&String::from_utf8(buf.take()).unwrap()).does_not_contain("ze-app");
     }
 

@@ -1,6 +1,4 @@
 use chrono::prelude::*;
-#[cfg(test)]
-use speculoos::prelude::*;
 use std::any::Any;
 use std::fmt::Debug;
 
@@ -145,46 +143,52 @@ impl Operator for Ordering {
     }
 }
 
-#[test]
-fn basic_query_tabular_expression() {
-    let operators: Vec<Box<dyn Operator>> = vec![
-        Box::new(SimpleFieldFilter::new("foo".to_owned(), "bar".to_owned())),
-        Box::new(Ordering),
-    ];
-    let query = Query::new("traces".to_owned(), operators);
-    assert_that(&query.tabular_expression())
-        .is_equal_to("traces | where foo == 'bar' | sort by timestamp asc".to_owned());
-}
+#[cfg(test)]
+mod test {
+    use super::{Operator, Ordering, Query, SimpleFieldFilter, TimespanFilter};
+    use speculoos::prelude::*;
 
-#[test]
-fn query_advance_start_time() {
-    let operators: Vec<Box<dyn Operator>> = vec![Box::new(TimespanFilter::new(
-        "2021-10-19T21:44:01.10Z".parse().ok(),
-        None,
-    ))];
-    let mut query = Query::new("traces".to_owned(), operators);
-    query.advance_start("2021-10-19T21:45:01.99Z".parse().ok());
-    assert_that(&query.tabular_expression()).is_equal_to(
-        "traces | where timestamp > datetime(2021-10-19T21:45:01.990+00:00)".to_owned(),
-    );
-}
+    #[test]
+    fn basic_query_tabular_expression() {
+        let operators: Vec<Box<dyn Operator>> = vec![
+            Box::new(SimpleFieldFilter::new("foo".to_owned(), "bar".to_owned())),
+            Box::new(Ordering),
+        ];
+        let query = Query::new("traces".to_owned(), operators);
+        assert_that(&query.tabular_expression())
+            .is_equal_to("traces | where foo == 'bar' | sort by timestamp asc".to_owned());
+    }
 
-#[test]
-fn timespan_starttime() {
-    let timespan = TimespanFilter::new("2021-10-19T21:44:01.10Z".parse().ok(), None);
-    assert_that(&timespan.to_term())
-        .is_equal_to(" | where timestamp > datetime(2021-10-19T21:44:01.100+00:00)".to_owned());
-}
+    #[test]
+    fn query_advance_start_time() {
+        let operators: Vec<Box<dyn Operator>> = vec![Box::new(TimespanFilter::new(
+            "2021-10-19T21:44:01.10Z".parse().ok(),
+            None,
+        ))];
+        let mut query = Query::new("traces".to_owned(), operators);
+        query.advance_start("2021-10-19T21:45:01.99Z".parse().ok());
+        assert_that(&query.tabular_expression()).is_equal_to(
+            "traces | where timestamp > datetime(2021-10-19T21:45:01.990+00:00)".to_owned(),
+        );
+    }
 
-#[test]
-fn timespan_endtime() {
-    let timespan = TimespanFilter::new(None, "2021-10-19T22:44:01.10Z".parse().ok());
-    assert_that(&timespan.to_term())
-        .is_equal_to(" | where timestamp < datetime(2021-10-19T22:44:01.100+00:00)".to_owned());
-}
+    #[test]
+    fn timespan_starttime() {
+        let timespan = TimespanFilter::new("2021-10-19T21:44:01.10Z".parse().ok(), None);
+        assert_that(&timespan.to_term())
+            .is_equal_to(" | where timestamp > datetime(2021-10-19T21:44:01.100+00:00)".to_owned());
+    }
 
-#[test]
-fn field_filter() {
-    let filter = SimpleFieldFilter::new("op".to_owned(), "ze-op".to_owned());
-    assert_that(&filter.to_term()).is_equal_to(" | where op == 'ze-op'".to_owned());
+    #[test]
+    fn timespan_endtime() {
+        let timespan = TimespanFilter::new(None, "2021-10-19T22:44:01.10Z".parse().ok());
+        assert_that(&timespan.to_term())
+            .is_equal_to(" | where timestamp < datetime(2021-10-19T22:44:01.100+00:00)".to_owned());
+    }
+
+    #[test]
+    fn field_filter() {
+        let filter = SimpleFieldFilter::new("op".to_owned(), "ze-op".to_owned());
+        assert_that(&filter.to_term()).is_equal_to(" | where op == 'ze-op'".to_owned());
+    }
 }

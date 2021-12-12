@@ -1,5 +1,5 @@
+use crate::kusto::{Ordering, Query, TimespanFilter};
 use crate::output::Presenter;
-use crate::queries::{Ordering, Query, TimespanFilter};
 use crate::source::{appinsights_row_to_entry, LogEntry, LogSource};
 use anyhow::Result;
 use async_trait::async_trait;
@@ -10,6 +10,17 @@ pub const T1: &str = "2021-11-20T06:18:30+00:00";
 pub const T2: &str = "2021-11-20T06:18:31+00:00";
 pub const T3: &str = "2021-11-20T06:18:32+00:00";
 pub const T4: &str = "2021-11-20T06:18:33+00:00";
+
+pub fn base_args() -> impl Iterator<Item = &'static str> {
+    vec![
+        "aztail",
+        "--app-id",
+        "ze-app",
+        "-s",
+        "2021-10-31T23:50:00+00:00",
+    ]
+    .into_iter()
+}
 
 pub fn raw() -> Map<String, Value> {
     json!({
@@ -24,9 +35,9 @@ pub fn raw() -> Map<String, Value> {
     .clone()
 }
 
-pub fn row<'a>(ts: &'a str) -> LogEntry {
+pub fn log_entry<'a>(timestamp: &'a str) -> LogEntry {
     let mut raw = raw();
-    raw["timestamp"] = Value::String(ts.to_owned());
+    raw["timestamp"] = Value::String(timestamp.to_owned());
     appinsights_row_to_entry(raw)
 }
 
@@ -39,7 +50,7 @@ impl TestSource {
     pub fn with_example_data() -> Box<Self> {
         Box::new(Self {
             query: some_query(),
-            results: Mutex::new(vec![row("2021-11-20T06:18:30+00:00")]),
+            results: Mutex::new(vec![log_entry("2021-11-20T06:18:30+00:00")]),
         })
     }
 

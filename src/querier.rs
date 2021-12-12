@@ -9,8 +9,8 @@ type QuerierArgs = (Vec<Box<dyn LogSource>>, Box<dyn Presenter>, bool);
 
 #[allow(clippy::match_on_vec_items)]
 pub async fn querier((mut sources, presenter, follow): QuerierArgs) -> Result<QuerierArgs> {
-    let mut max_ts_by_stream = Vec::new();
-    max_ts_by_stream.resize(sources.len(), None::<DateTime<FixedOffset>>);
+    let mut source_max_ts = Vec::new();
+    source_max_ts.resize(sources.len(), None::<DateTime<FixedOffset>>);
     let streams = join_all(sources.iter().map(|source| source.stream()))
         .await
         .into_iter()
@@ -21,7 +21,7 @@ pub async fn querier((mut sources, presenter, follow): QuerierArgs) -> Result<Qu
         .map(|(source_id, stream)| stream.map(move |entry| (source_id, entry)))
         .kmerge_by(|(_, l), (_, r)| l < r);
     for (source_id, log_entry) in log_entries {
-        max_ts_by_stream[source_id] = match max_ts_by_stream[source_id] {
+        source_max_ts[source_id] = match source_max_ts[source_id] {
             None => Some(log_entry.timestamp()),
             Some(prev_ts) if log_entry.timestamp() > prev_ts => Some(log_entry.timestamp()),
             Some(prev_ts) => Some(prev_ts),
@@ -29,7 +29,7 @@ pub async fn querier((mut sources, presenter, follow): QuerierArgs) -> Result<Qu
         presenter.present(&log_entry)?;
     }
     if follow {
-        for (source_id, max_ts) in max_ts_by_stream.into_iter().enumerate() {
+        for (source_id, max_ts) in source_max_ts.into_iter().enumerate() {
             if max_ts.is_some() {
                 sources[source_id].get_query_mut().advance_start(max_ts);
             }
@@ -84,8 +84,8 @@ mod test {
 
     #[tokio::test]
     async fn querier_sorts_entries_across_streams() -> Result<()> {
-        let source1 = TestSource::with_rows(vec![row(T1), row(T4)]);
-        let source2 = TestSource::with_rows(vec![row(T2), row(T3)]);
+        let source1 = TestSource::with_rows(vec![log_entry(T1), log_entry(T4)]);
+        let source2 = TestSource::with_rows(vec![log_entry(T2), log_entry(T3)]);
         let presented = Arc::new(Mutex::new(Vec::new()));
         let presenter = TestPresenter::output_to(&presented);
         querier((vec![source1, source2], presenter, true)).await?;
@@ -100,8 +100,8 @@ mod test {
 
     #[tokio::test]
     async fn querier_advances_start_time_individually_for_each_stream() -> Result<()> {
-        let source1 = TestSource::with_rows(vec![row(T1)]);
-        let source2 = TestSource::with_rows(vec![row(T2)]);
+        let source1 = TestSource::with_rows(vec![log_entry(T1)]);
+        let source2 = TestSource::with_rows(vec![log_entry(T2)]);
         let presenter = TestPresenter::new();
         let (mut sources, _, _) = querier((vec![source1, source2], presenter, true)).await?;
         assert_that(&sources[0].get_query_mut().peek_timespan())

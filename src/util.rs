@@ -20,33 +20,41 @@ where
     }
 }
 
-#[tokio::test]
-async fn test_repeater() {
-    let start = Instant::now();
-    let res = repeater(Duration::from_millis(20), 0, |mut counter| async move {
-        counter += 1;
-        if counter == 5 {
-            return Err(counter);
-        }
-        Ok(counter)
-    })
-    .await;
-    assert_eq!(res, 5);
-    assert!(Instant::now() - start > Duration::from_millis(80));
-    assert!(Instant::now() - start < Duration::from_millis(500));
-}
+#[cfg(test)]
+mod test {
+    use tokio::time::sleep;
 
-#[tokio::test]
-async fn test_repeater_slow_worker() {
-    let start = Instant::now();
-    repeater(Duration::from_millis(5), 0, |mut counter| async move {
-        sleep(Duration::from_millis(20)).await;
-        counter += 1;
-        if counter == 5 {
-            return Err(counter);
-        }
-        Ok(counter)
-    })
-    .await;
-    assert!(Instant::now() - start > Duration::from_millis(80));
+    use super::repeater;
+    use std::time::{Duration, Instant};
+
+    #[tokio::test]
+    async fn test_repeater() {
+        let start = Instant::now();
+        let res = repeater(Duration::from_millis(20), 0, |mut counter| async move {
+            counter += 1;
+            if counter == 5 {
+                return Err(counter);
+            }
+            Ok(counter)
+        })
+        .await;
+        assert_eq!(res, 5);
+        assert!(Instant::now() - start > Duration::from_millis(80));
+        assert!(Instant::now() - start < Duration::from_millis(500));
+    }
+
+    #[tokio::test]
+    async fn test_repeater_slow_worker() {
+        let start = Instant::now();
+        repeater(Duration::from_millis(5), 0, |mut counter| async move {
+            sleep(Duration::from_millis(20)).await;
+            counter += 1;
+            if counter == 5 {
+                return Err(counter);
+            }
+            Ok(counter)
+        })
+        .await;
+        assert!(Instant::now() - start > Duration::from_millis(80));
+    }
 }

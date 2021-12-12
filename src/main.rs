@@ -1,3 +1,4 @@
+use crate::kusto::{Operator, Ordering, Query, SimpleFieldFilter, TimespanFilter};
 use crate::output::{ColorTextPresenter, Presenter, PrettyJsonPresenter};
 use crate::source::{AppInsights, LogSource};
 use anyhow::Result;
@@ -5,10 +6,10 @@ use std::io::stdout;
 use std::time::Duration;
 use thiserror::Error;
 
+mod kusto;
 mod options;
 mod output;
 mod querier;
-mod queries;
 mod source;
 #[cfg(test)]
 mod testing;
@@ -31,27 +32,27 @@ fn build_presenter(opts: &options::Opts) -> Box<dyn Presenter> {
     }
 }
 
-fn build_operators(opts: &options::Opts) -> Vec<Box<dyn queries::Operator>> {
-    let mut operators: Vec<Box<dyn queries::Operator>> = Vec::new();
+fn build_operators(opts: &options::Opts) -> Vec<Box<dyn Operator>> {
+    let mut operators: Vec<Box<dyn Operator>> = Vec::new();
     if opts.start_time.is_some() || opts.end_time.is_some() {
-        operators.push(Box::new(queries::TimespanFilter::new(
+        operators.push(Box::new(TimespanFilter::new(
             opts.start_time,
             opts.end_time,
         )));
     }
     if opts.app.is_some() {
-        operators.push(Box::new(queries::SimpleFieldFilter::new(
+        operators.push(Box::new(SimpleFieldFilter::new(
             "cloud_RoleName".to_owned(),
             opts.app.clone().unwrap(),
         )));
     }
     if opts.operation.is_some() {
-        operators.push(Box::new(queries::SimpleFieldFilter::new(
+        operators.push(Box::new(SimpleFieldFilter::new(
             "operation_Name".to_owned(),
             opts.operation.clone().unwrap(),
         )));
     }
-    operators.push(Box::new(queries::Ordering {}));
+    operators.push(Box::new(Ordering {}));
     operators
 }
 
@@ -62,7 +63,7 @@ async fn main() -> Result<()> {
     colored::control::set_virtual_terminal(true).unwrap();
 
     let operators = build_operators(&opts);
-    let query = queries::Query::new("traces".to_owned(), operators);
+    let query = Query::new("traces".to_owned(), operators);
     let log_source: Box<dyn LogSource> = Box::new(AppInsights::new(query, opts.clone()));
     let presenter = build_presenter(&opts);
     match util::repeater(
@@ -86,8 +87,9 @@ async fn main() -> Result<()> {
 
 #[cfg(test)]
 mod test {
-    use crate::options::{base_args, cli_opts};
-    use crate::queries::Ordering;
+    use crate::options::cli_opts;
+    use crate::testing::base_args;
+    use crate::Ordering;
     use speculoos::prelude::*;
 
     #[test]

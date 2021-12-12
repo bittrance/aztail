@@ -1,5 +1,5 @@
+use crate::kusto::Query;
 use crate::options::Opts;
-use crate::queries::Query;
 use anyhow::Result;
 use async_trait::async_trait;
 use azure_identity::token_credentials::AzureCliCredential;
