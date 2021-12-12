@@ -8,9 +8,14 @@ use serde_json::{
 };
 use std::sync::{Arc, Mutex};
 
-pub fn row() -> Map<String, Value> {
+pub const T1: &str = "2021-11-20T06:18:30+00:00";
+pub const T2: &str = "2021-11-20T06:18:31+00:00";
+pub const T3: &str = "2021-11-20T06:18:32+00:00";
+pub const T4: &str = "2021-11-20T06:18:33+00:00";
+
+pub fn row<'a>(ts: &'a str) -> Map<String, Value> {
     json!({
-        "timestamp": "2021-11-20T06:18:30+00:00",
+        "timestamp": ts,
         "cloud_RoleName": "ze-app",
         "operation_Name": "ze-operation",
         "message": "ze-message",
@@ -27,11 +32,18 @@ pub struct TestSource {
 }
 
 impl TestSource {
-    pub fn with_example_data() -> Self {
-        Self {
+    pub fn with_example_data() -> Box<Self> {
+        Box::new(Self {
             query: some_query(),
-            results: Mutex::new(vec![row()]),
-        }
+            results: Mutex::new(vec![row("2021-11-20T06:18:30+00:00")]),
+        })
+    }
+
+    pub fn with_rows(rows: Vec<Map<String, Value>>) -> Box<Self> {
+        Box::new(Self {
+            query: some_query(),
+            results: Mutex::new(rows),
+        })
     }
 }
 
@@ -41,6 +53,7 @@ impl LogSource for TestSource {
         let res = self.results.lock().unwrap().clone();
         Ok(Box::new(res.into_iter()))
     }
+
     fn get_query_mut(&mut self) -> &mut Query {
         &mut self.query
     }
@@ -51,10 +64,16 @@ pub struct TestPresenter {
 }
 
 impl TestPresenter {
-    pub fn new() -> Self {
-        Self {
+    pub fn new() -> Box<Self> {
+        Box::new(Self {
             rows: Arc::new(Mutex::new(Vec::new())),
-        }
+        })
+    }
+
+    pub fn output_to<'a>(rows: &Arc<Mutex<Vec<Map<String, Value>>>>) -> Box<Self> {
+        Box::new(Self {
+            rows: Arc::clone(rows),
+        })
     }
 }
 

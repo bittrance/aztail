@@ -68,7 +68,7 @@ async fn main() -> Result<()> {
     let presenter = build_presenter(&opts);
     match util::repeater(
         Duration::from_secs(10),
-        (log_source, presenter, opts.follow),
+        (vec![log_source], presenter, opts.follow),
         querier::querier,
     )
     .await

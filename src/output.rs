@@ -91,7 +91,7 @@ mod tests {
     use super::ColorTextPresenter;
     use crate::options::{base_args, cli_opts};
     use crate::output::Presenter;
-    use crate::testing::row;
+    use crate::testing::*;
     use colored::Colorize;
     use serde_json::json;
     use speculoos::prelude::*;
@@ -116,7 +116,7 @@ mod tests {
         let buf = Rc::new(RefCell::new(Vec::new()));
         let output = WriterWrapper { buf: buf.clone() };
         let presenter = ColorTextPresenter::new(output, &opts);
-        presenter.present(&row()).unwrap();
+        presenter.present(&row(T1)).unwrap();
         let res = String::from_utf8(buf.take()).unwrap();
         assert_that(&res).contains("ze-app");
         assert_that(&res).contains("ze-operation");
@@ -129,7 +129,7 @@ mod tests {
         let buf = Rc::new(RefCell::new(Vec::new()));
         let output = WriterWrapper { buf: buf.clone() };
         let presenter = ColorTextPresenter::new(output, &opts);
-        presenter.present(&row()).unwrap();
+        presenter.present(&row(T1)).unwrap();
         assert_that(&String::from_utf8(buf.take()).unwrap()).does_not_contain("ze-operation");
     }
 
@@ -139,13 +139,13 @@ mod tests {
         let buf = Rc::new(RefCell::new(Vec::new()));
         let output = WriterWrapper { buf: buf.clone() };
         let presenter = ColorTextPresenter::new(output, &opts);
-        presenter.present(&row()).unwrap();
+        presenter.present(&row(T1)).unwrap();
         assert_that(&String::from_utf8(buf.take()).unwrap()).does_not_contain("ze-app");
     }
 
     #[test]
     fn logs_have_color() {
-        let mut entry = row();
+        let mut entry = row(T1);
         entry.insert("severityLevel".to_owned(), json!(2));
         let opts = cli_opts(base_args()).unwrap();
         let buf = Rc::new(RefCell::new(Vec::new()));
