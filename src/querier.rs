@@ -1,17 +1,11 @@
-use crate::appinsights::LogSource;
 use crate::output::Presenter;
+use crate::source::LogSource;
 use anyhow::{anyhow, Result};
 use chrono::{DateTime, FixedOffset};
 use futures::future::join_all;
 use itertools::Itertools;
-use serde_json::value::{Map, Value};
 
 type QuerierArgs = (Vec<Box<dyn LogSource>>, Box<dyn Presenter>, bool);
-
-fn datetime_from_row(row: &Map<String, Value>) -> Option<DateTime<FixedOffset>> {
-    row.get("timestamp")
-        .map(|v| DateTime::parse_from_rfc3339(v.as_str().unwrap()).unwrap())
-}
 
 #[allow(clippy::match_on_vec_items)]
 pub async fn querier((mut sources, presenter, follow): QuerierArgs) -> Result<QuerierArgs> {
@@ -25,19 +19,14 @@ pub async fn querier((mut sources, presenter, follow): QuerierArgs) -> Result<Qu
         .into_iter()
         .enumerate()
         .map(|(source_id, stream)| stream.map(move |entry| (source_id, entry)))
-        .kmerge_by(|(_, l), (_, r)| datetime_from_row(l) < datetime_from_row(r));
-    for (source_id, row) in log_entries {
-        if let Some(ts) = row
-            .get("timestamp")
-            .map(|v| DateTime::parse_from_rfc3339(v.as_str().unwrap()).unwrap())
-        {
-            max_ts_by_stream[source_id] = match max_ts_by_stream[source_id] {
-                None => Some(ts),
-                Some(prev_ts) if ts > prev_ts => Some(ts),
-                Some(prev_ts) => Some(prev_ts),
-            }
-        }
-        presenter.present(&row)?;
+        .kmerge_by(|(_, l), (_, r)| l < r);
+    for (source_id, log_entry) in log_entries {
+        max_ts_by_stream[source_id] = match max_ts_by_stream[source_id] {
+            None => Some(log_entry.timestamp()),
+            Some(prev_ts) if log_entry.timestamp() > prev_ts => Some(log_entry.timestamp()),
+            Some(prev_ts) => Some(prev_ts),
+        };
+        presenter.present(&log_entry)?;
     }
     if follow {
         for (source_id, max_ts) in max_ts_by_stream.into_iter().enumerate() {
@@ -56,7 +45,6 @@ mod test {
     use super::querier;
     use crate::testing::*;
     use anyhow::Result;
-    use serde_json::json;
     use speculoos::prelude::*;
     use std::panic;
     use std::sync::{Arc, Mutex};
@@ -103,10 +91,10 @@ mod test {
         querier((vec![source1, source2], presenter, true)).await?;
         let res = Arc::try_unwrap(presented).unwrap().into_inner().unwrap();
         assert_that(&res).has_length(4);
-        assert_that(&res[0].get("timestamp")).is_equal_to(&Some(&json!(T1)));
-        assert_that(&res[1].get("timestamp")).is_equal_to(&Some(&json!(T2)));
-        assert_that(&res[2].get("timestamp")).is_equal_to(&Some(&json!(T3)));
-        assert_that(&res[3].get("timestamp")).is_equal_to(&Some(&json!(T4)));
+        assert_that(&res[0].timestamp()).is_equal_to(&T1.parse().unwrap());
+        assert_that(&res[1].timestamp()).is_equal_to(&T2.parse().unwrap());
+        assert_that(&res[2].timestamp()).is_equal_to(&T3.parse().unwrap());
+        assert_that(&res[3].timestamp()).is_equal_to(&T4.parse().unwrap());
         Ok(())
     }
 

@@ -1,15 +1,15 @@
 use crate::output::{ColorTextPresenter, Presenter, PrettyJsonPresenter};
+use crate::source::{AppInsights, LogSource};
 use anyhow::Result;
-use appinsights::LogSource;
 use std::io::stdout;
 use std::time::Duration;
 use thiserror::Error;
 
-mod appinsights;
 mod options;
 mod output;
 mod querier;
 mod queries;
+mod source;
 #[cfg(test)]
 mod testing;
 mod util;
@@ -63,8 +63,7 @@ async fn main() -> Result<()> {
 
     let operators = build_operators(&opts);
     let query = queries::Query::new("traces".to_owned(), operators);
-    let log_source: Box<dyn LogSource> =
-        Box::new(appinsights::AppInsights::new(query, opts.clone()));
+    let log_source: Box<dyn LogSource> = Box::new(AppInsights::new(query, opts.clone()));
     let presenter = build_presenter(&opts);
     match util::repeater(
         Duration::from_secs(10),

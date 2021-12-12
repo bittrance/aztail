@@ -1,11 +1,9 @@
+use crate::output::Presenter;
 use crate::queries::{Ordering, Query, TimespanFilter};
-use crate::{appinsights::LogSource, output::Presenter};
+use crate::source::{appinsights_row_to_entry, LogEntry, LogSource};
 use anyhow::Result;
 use async_trait::async_trait;
-use serde_json::{
-    json,
-    value::{Map, Value},
-};
+use serde_json::{json, Map, Value};
 use std::sync::{Arc, Mutex};
 
 pub const T1: &str = "2021-11-20T06:18:30+00:00";
@@ -13,9 +11,9 @@ pub const T2: &str = "2021-11-20T06:18:31+00:00";
 pub const T3: &str = "2021-11-20T06:18:32+00:00";
 pub const T4: &str = "2021-11-20T06:18:33+00:00";
 
-pub fn row<'a>(ts: &'a str) -> Map<String, Value> {
+pub fn raw() -> Map<String, Value> {
     json!({
-        "timestamp": ts,
+        "timestamp": T1,
         "cloud_RoleName": "ze-app",
         "operation_Name": "ze-operation",
         "message": "ze-message",
@@ -26,9 +24,15 @@ pub fn row<'a>(ts: &'a str) -> Map<String, Value> {
     .clone()
 }
 
+pub fn row<'a>(ts: &'a str) -> LogEntry {
+    let mut raw = raw();
+    raw["timestamp"] = Value::String(ts.to_owned());
+    appinsights_row_to_entry(raw)
+}
+
 pub struct TestSource {
     pub query: Query,
-    pub results: Mutex<Vec<Map<String, Value>>>,
+    pub results: Mutex<Vec<LogEntry>>,
 }
 
 impl TestSource {
@@ -39,7 +43,7 @@ impl TestSource {
         })
     }
 
-    pub fn with_rows(rows: Vec<Map<String, Value>>) -> Box<Self> {
+    pub fn with_rows(rows: Vec<LogEntry>) -> Box<Self> {
         Box::new(Self {
             query: some_query(),
             results: Mutex::new(rows),
@@ -49,7 +53,7 @@ impl TestSource {
 
 #[async_trait]
 impl LogSource for TestSource {
-    async fn stream(&self) -> Result<Box<dyn Iterator<Item = Map<String, Value>>>> {
+    async fn stream(&self) -> Result<Box<dyn Iterator<Item = LogEntry>>> {
         let res = self.results.lock().unwrap().clone();
         Ok(Box::new(res.into_iter()))
     }
@@ -60,7 +64,7 @@ impl LogSource for TestSource {
 }
 
 pub struct TestPresenter {
-    pub rows: Arc<Mutex<Vec<Map<String, Value>>>>,
+    pub rows: Arc<Mutex<Vec<LogEntry>>>,
 }
 
 impl TestPresenter {
@@ -70,7 +74,7 @@ impl TestPresenter {
         })
     }
 
-    pub fn output_to<'a>(rows: &Arc<Mutex<Vec<Map<String, Value>>>>) -> Box<Self> {
+    pub fn output_to<'a>(rows: &Arc<Mutex<Vec<LogEntry>>>) -> Box<Self> {
         Box::new(Self {
             rows: Arc::clone(rows),
         })
@@ -78,7 +82,7 @@ impl TestPresenter {
 }
 
 impl Presenter for TestPresenter {
-    fn present(&self, row: &Map<String, Value>) -> Result<()> {
+    fn present(&self, row: &LogEntry) -> Result<()> {
         self.rows.lock().unwrap().push(row.clone());
         Ok(())
     }
