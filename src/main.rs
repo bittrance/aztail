@@ -1,6 +1,6 @@
 use crate::kusto::{Operator, Ordering, Query, SimpleFieldFilter, TimespanFilter};
 use crate::output::{ColorTextPresenter, Presenter, PrettyJsonPresenter};
-use crate::source::{AppInsights, LogSource};
+use crate::source::{appsinsight::AppInsights, LogSource};
 use anyhow::Result;
 use std::io::stdout;
 use std::time::Duration;

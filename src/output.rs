@@ -82,7 +82,7 @@ mod tests {
     use super::ColorTextPresenter;
     use crate::options::cli_opts;
     use crate::output::Presenter;
-    use crate::source::appinsights_row_to_entry;
+    use crate::source::appsinsight::appinsights_row_to_entry;
     use crate::testing::*;
     use colored::Colorize;
     use serde_json::json;

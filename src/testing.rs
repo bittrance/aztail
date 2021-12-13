@@ -1,6 +1,6 @@
 use crate::kusto::{Ordering, Query, TimespanFilter};
 use crate::output::Presenter;
-use crate::source::{appinsights_row_to_entry, LogEntry, LogSource};
+use crate::source::{appsinsight::appinsights_row_to_entry, LogEntry, LogSource};
 use anyhow::Result;
 use async_trait::async_trait;
 use serde_json::{json, Map, Value};

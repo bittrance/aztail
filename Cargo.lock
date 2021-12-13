@@ -57,6 +57,7 @@ dependencies = [
  "azure_core",
  "azure_identity",
  "azure_svc_applicationinsights",
+ "azure_svc_operationalinsights",
  "chrono",
  "chrono-english",
  "clap",
@@ -116,6 +117,21 @@ dependencies = [
 
 [[package]]
 name = "azure_svc_applicationinsights"
+version = "0.1.0"
+source = "git+https://github.com/Azure/azure-sdk-for-rust?rev=0a9ef64f#0a9ef64ff17316b2684e9ec92d49628261266edb"
+dependencies = [
+ "azure_core",
+ "bytes",
+ "http",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "url",
+]
+
+[[package]]
+name = "azure_svc_operationalinsights"
 version = "0.1.0"
 source = "git+https://github.com/Azure/azure-sdk-for-rust?rev=0a9ef64f#0a9ef64ff17316b2684e9ec92d49628261266edb"
 dependencies = [
