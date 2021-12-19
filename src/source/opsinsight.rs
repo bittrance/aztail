@@ -43,7 +43,7 @@ impl OpsLogs {
 impl LogSource for OpsLogs {
     async fn stream(&self) -> Result<Box<dyn Iterator<Item = LogEntry>>> {
         let body = QueryBody {
-            query: self.query.tabular_expression(),
+            query: format!("{}", self.query),
             timespan: None,
             workspaces: None,
         };

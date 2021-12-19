@@ -1,4 +1,4 @@
-use crate::kusto::{Operator, Ordering, Query, SimpleFieldFilter, TimespanFilter};
+use crate::kusto::{Eq, Filter, Operator, Ordering, Query, Timespan};
 use crate::output::{ColorTextPresenter, Presenter, PrettyJsonPresenter};
 use crate::source::{appsinsight::AppInsights, LogSource};
 use anyhow::Result;
@@ -34,25 +34,19 @@ fn build_presenter(opts: &options::Opts) -> Box<dyn Presenter> {
 
 fn build_operators(opts: &options::Opts) -> Vec<Box<dyn Operator>> {
     let mut operators: Vec<Box<dyn Operator>> = Vec::new();
-    if opts.start_time.is_some() || opts.end_time.is_some() {
-        operators.push(Box::new(TimespanFilter::new(
-            opts.start_time,
-            opts.end_time,
-        )));
-    }
     if opts.app.is_some() {
-        operators.push(Box::new(SimpleFieldFilter::new(
+        operators.push(Box::new(Filter::new(Eq::new(
             "cloud_RoleName".to_owned(),
             opts.app.clone().unwrap(),
-        )));
+        ))));
     }
     if opts.operation.is_some() {
-        operators.push(Box::new(SimpleFieldFilter::new(
+        operators.push(Box::new(Filter::new(Eq::new(
             "operation_Name".to_owned(),
             opts.operation.clone().unwrap(),
-        )));
+        ))));
     }
-    operators.push(Box::new(Ordering {}));
+    operators.push(Box::new(Ordering::new("timestamp".to_owned())));
     operators
 }
 
@@ -63,7 +57,11 @@ async fn main() -> Result<()> {
     colored::control::set_virtual_terminal(true).unwrap();
 
     let operators = build_operators(&opts);
-    let query = Query::new("traces".to_owned(), operators);
+    let query = Query::new(
+        "traces".to_owned(),
+        Timespan::new("timestamp".to_owned(), opts.start_time, opts.end_time),
+        operators,
+    );
     let log_source: Box<dyn LogSource> = Box::new(AppInsights::new(query, opts.clone()));
     let presenter = build_presenter(&opts);
     match util::repeater(
@@ -82,23 +80,5 @@ async fn main() -> Result<()> {
             Ok(())
         }
         err => Err(err),
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use crate::options::cli_opts;
-    use crate::testing::base_args;
-    use crate::Ordering;
-    use speculoos::prelude::*;
-
-    #[test]
-    fn last_operator_is_ordering() {
-        let opts = cli_opts(base_args()).unwrap();
-        let res = super::build_operators(&opts);
-        let ordering_pos = res.iter().position(|o| o.as_any().is::<Ordering>());
-        assert_that(&ordering_pos)
-            .is_some()
-            .is_equal_to(res.len() - 1);
     }
 }

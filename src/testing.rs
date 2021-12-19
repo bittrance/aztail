@@ -1,4 +1,4 @@
-use crate::kusto::{Ordering, Query, TimespanFilter};
+use crate::kusto::{Ordering, Query, Timespan};
 use crate::output::Presenter;
 use crate::source::{appsinsight::appinsights_row_to_entry, LogEntry, LogSource};
 use anyhow::Result;
@@ -102,12 +102,11 @@ impl Presenter for TestPresenter {
 pub fn some_query() -> Query {
     Query::new(
         "ZeTable".to_owned(),
-        vec![
-            Box::new(TimespanFilter::new(
-                "2021-11-20T05:18:30+00:00".parse().ok(),
-                None,
-            )),
-            Box::new(Ordering),
-        ],
+        Timespan::new(
+            "timestamp".to_owned(),
+            "2021-11-20T05:18:30+00:00".parse().ok(),
+            None,
+        ),
+        vec![Box::new(Ordering::new("timestamp".to_owned()))],
     )
 }

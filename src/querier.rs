@@ -43,6 +43,7 @@ pub async fn querier((mut sources, presenter, follow): QuerierArgs) -> Result<Qu
 #[cfg(test)]
 mod test {
     use super::querier;
+    use crate::kusto::Timespan;
     use crate::testing::*;
     use anyhow::Result;
     use speculoos::prelude::*;
@@ -104,10 +105,16 @@ mod test {
         let source2 = TestSource::with_rows(vec![log_entry(T2)]);
         let presenter = TestPresenter::new();
         let (mut sources, _, _) = querier((vec![source1, source2], presenter, true)).await?;
-        assert_that(&sources[0].get_query_mut().peek_timespan())
-            .is_equal_to(Some((T1.parse().ok(), None)));
-        assert_that(&sources[1].get_query_mut().peek_timespan())
-            .is_equal_to(Some((T2.parse().ok(), None)));
+        assert_that(&sources[0].get_query_mut().peek_timespan()).is_equal_to(&Timespan::new(
+            "timestamp".to_owned(),
+            T1.parse().ok(),
+            None,
+        ));
+        assert_that(&sources[1].get_query_mut().peek_timespan()).is_equal_to(&Timespan::new(
+            "timestamp".to_owned(),
+            T2.parse().ok(),
+            None,
+        ));
         Ok(())
     }
 }

@@ -39,7 +39,7 @@ impl AppInsights {
 impl LogSource for AppInsights {
     async fn stream(&self) -> Result<Box<dyn Iterator<Item = LogEntry>>> {
         let body = QueryBody {
-            query: self.query.tabular_expression(),
+            query: format!("{}", self.query),
             timespan: None,
             applications: None,
         };
