@@ -1,6 +1,8 @@
+use std::sync::Arc;
+
 use crate::kusto::Query;
 use crate::options::Opts;
-use crate::source::{Level, LogEntry, LogSource};
+use crate::source::{Adapter, Level, LogEntry, LogSource};
 use anyhow::Result;
 use async_trait::async_trait;
 use azure_identity::token_credentials::AzureCliCredential;
@@ -15,11 +17,12 @@ const ENDPOINT: &str = "https://api.applicationinsights.io";
 pub struct AppInsights {
     config: OperationConfig,
     query: Query,
+    adapter: Arc<Adapter>,
     opts: Opts,
 }
 
 impl AppInsights {
-    pub fn new(query: Query, opts: Opts) -> Self {
+    pub fn new(query: Query, adapter: Adapter, opts: Opts) -> Self {
         let base_path = format!("{}/v1", ENDPOINT);
         let http_client = azure_core::new_http_client();
         let token_credential = Box::new(AzureCliCredential {});
@@ -30,6 +33,7 @@ impl AppInsights {
         AppInsights {
             config,
             query,
+            adapter: Arc::new(adapter),
             opts,
         }
     }
@@ -44,6 +48,7 @@ impl LogSource for AppInsights {
             applications: None,
         };
         let response = query::execute(&self.config, &self.opts.app_id, &body).await?;
+        let adapter = self.adapter.clone();
         let log_entries = response
             .tables
             .into_iter()
@@ -67,7 +72,7 @@ impl LogSource for AppInsights {
                             .collect::<Map<String, Value>>()
                     })
             })
-            .map(appinsights_row_to_entry);
+            .map(move |row| adapter(row));
         Ok(Box::new(log_entries))
     }
 

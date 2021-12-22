@@ -69,3 +69,5 @@ pub trait LogSource {
     async fn stream(&self) -> Result<Box<dyn Iterator<Item = LogEntry>>>;
     fn get_query_mut(&mut self) -> &mut Query;
 }
+
+pub type Adapter = Box<dyn Fn(Map<String, Value>) -> LogEntry + Sync + Send>;

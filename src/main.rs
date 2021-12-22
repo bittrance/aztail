@@ -1,6 +1,6 @@
 use crate::kusto::{Eq, Filter, Operator, Ordering, Query, Timespan};
 use crate::output::{ColorTextPresenter, Presenter, PrettyJsonPresenter};
-use crate::source::{appsinsight::AppInsights, LogSource};
+use crate::source::{appsinsight::appinsights_row_to_entry, appsinsight::AppInsights, LogSource};
 use anyhow::Result;
 use std::io::stdout;
 use std::time::Duration;
@@ -62,7 +62,11 @@ async fn main() -> Result<()> {
         Timespan::new("timestamp".to_owned(), opts.start_time, opts.end_time),
         operators,
     );
-    let log_source: Box<dyn LogSource> = Box::new(AppInsights::new(query, opts.clone()));
+    let log_source: Box<dyn LogSource> = Box::new(AppInsights::new(
+        query,
+        Box::new(appinsights_row_to_entry),
+        opts.clone(),
+    ));
     let presenter = build_presenter(&opts);
     match util::repeater(
         Duration::from_secs(10),

@@ -1,6 +1,6 @@
 use crate::kusto::Query;
 use crate::options::Opts;
-use crate::source::{LogEntry, LogSource};
+use crate::source::{Adapter, LogEntry, LogSource};
 use anyhow::Result;
 use async_trait::async_trait;
 use azure_identity::token_credentials::AzureCliCredential;
@@ -12,8 +12,6 @@ use std::sync::Arc;
 
 const ENDPOINT: &str = "https://api.loganalytics.io";
 
-type Adapter = Box<dyn Fn(Map<String, Value>) -> LogEntry + Sync + Send>;
-
 pub struct OpsLogs {
     config: OperationConfig,
     query: Query,
@@ -22,7 +20,7 @@ pub struct OpsLogs {
 }
 
 impl OpsLogs {
-    pub fn new(query: Query, adapter: Box<Adapter>, opts: Opts) -> Self {
+    pub fn new(query: Query, adapter: Adapter, opts: Opts) -> Self {
         let base_path = format!("{}/v1", ENDPOINT);
         let http_client = azure_core::new_http_client();
         let token_credential = Box::new(AzureCliCredential {});
