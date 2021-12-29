@@ -6,15 +6,13 @@ use crate::source::{Adapter, LogEntry, LogSource};
 use anyhow::Result;
 use async_trait::async_trait;
 use azure_identity::token_credentials::AzureCliCredential;
-use azure_svc_applicationinsights::{
-    config, models::QueryBody, operations::query, OperationConfig,
-};
+use azure_svc_applicationinsights::{models::QueryBody, Client, ClientBuilder};
 use serde_json::value::{Map, Value};
 
 const ENDPOINT: &str = "https://api.applicationinsights.io";
 
 pub struct AppInsights {
-    config: OperationConfig,
+    client: Client,
     query: Query,
     adapter: Arc<Adapter>,
     opts: Opts,
@@ -23,14 +21,13 @@ pub struct AppInsights {
 impl AppInsights {
     pub fn new(query: Query, adapter: Adapter, opts: Opts) -> Self {
         let base_path = format!("{}/v1", ENDPOINT);
-        let http_client = azure_core::new_http_client();
-        let token_credential = Box::new(AzureCliCredential {});
-        let config = config(http_client, token_credential)
-            .base_path(base_path)
-            .token_credential_resource(ENDPOINT)
+        let token_credential = Arc::new(AzureCliCredential {});
+        let client = ClientBuilder::new(token_credential)
+            .endpoint(base_path)
+            .scopes(&[ENDPOINT])
             .build();
         AppInsights {
-            config,
+            client,
             query,
             adapter: Arc::new(adapter),
             opts,
@@ -50,8 +47,12 @@ impl LogSource for AppInsights {
             timespan: None,
             applications: None,
         };
-        let response =
-            query::execute(&self.config, &self.opts.app_id.clone().unwrap(), &body).await?;
+        let response = self
+            .client
+            .query()
+            .execute(&self.opts.app_id.clone().unwrap(), body)
+            .into_future()
+            .await?;
         let adapter = self.adapter.clone();
         let log_entries = response
             .tables
