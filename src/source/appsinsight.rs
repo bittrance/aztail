@@ -2,14 +2,13 @@ use std::sync::Arc;
 
 use crate::kusto::Query;
 use crate::options::Opts;
-use crate::source::{Adapter, Level, LogEntry, LogSource};
+use crate::source::{Adapter, LogEntry, LogSource};
 use anyhow::Result;
 use async_trait::async_trait;
 use azure_identity::token_credentials::AzureCliCredential;
 use azure_svc_applicationinsights::{
     config, models::QueryBody, operations::query, OperationConfig,
 };
-use chrono::DateTime;
 use serde_json::value::{Map, Value};
 
 const ENDPOINT: &str = "https://api.applicationinsights.io";
@@ -37,6 +36,10 @@ impl AppInsights {
             opts,
         }
     }
+
+    pub fn boxed(query: Query, adapter: Adapter, opts: Opts) -> Box<dyn LogSource> {
+        Box::new(AppInsights::new(query, adapter, opts))
+    }
 }
 
 #[async_trait]
@@ -47,7 +50,8 @@ impl LogSource for AppInsights {
             timespan: None,
             applications: None,
         };
-        let response = query::execute(&self.config, &self.opts.app_id, &body).await?;
+        let response =
+            query::execute(&self.config, &self.opts.app_id.clone().unwrap(), &body).await?;
         let adapter = self.adapter.clone();
         let log_entries = response
             .tables
@@ -78,33 +82,5 @@ impl LogSource for AppInsights {
 
     fn get_query_mut(&mut self) -> &mut Query {
         &mut self.query
-    }
-}
-
-fn unwrap_as_str(value: Option<&Value>) -> &str {
-    value.unwrap().as_str().unwrap()
-}
-
-pub fn appinsights_row_to_entry(row: Map<String, Value>) -> LogEntry {
-    let timestamp = row
-        .get("timestamp")
-        .map(|v| DateTime::parse_from_rfc3339(v.as_str().unwrap()).unwrap())
-        .unwrap();
-    let group = unwrap_as_str(row.get("cloud_RoleName")).to_owned();
-    let unit = unwrap_as_str(row.get("operation_Name")).to_owned();
-    let level = match row.get("severityLevel").unwrap().as_i64() {
-        Some(3) => Level::Error,
-        Some(2) => Level::Warn,
-        Some(1) | None => Level::Info,
-        Some(_) => Level::Verbose,
-    };
-    let message = unwrap_as_str(row.get("message")).to_owned();
-    LogEntry {
-        timestamp,
-        group,
-        unit,
-        level,
-        message,
-        raw: row,
     }
 }

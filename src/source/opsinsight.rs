@@ -35,6 +35,10 @@ impl OpsLogs {
             opts,
         }
     }
+
+    pub fn boxed(query: Query, adapter: Adapter, opts: Opts) -> Box<Self> {
+        Box::new(OpsLogs::new(query, adapter, opts))
+    }
 }
 
 #[async_trait]
@@ -45,7 +49,8 @@ impl LogSource for OpsLogs {
             timespan: None,
             workspaces: None,
         };
-        let response = query::execute(&self.config, &self.opts.app_id, &body).await?;
+        let response =
+            query::execute(&self.config, &self.opts.workspace.clone().unwrap(), &body).await?;
         let adapter = self.adapter.clone();
         let log_entries = response
             .tables

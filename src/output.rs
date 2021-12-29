@@ -44,8 +44,8 @@ impl<'a> ColorTextPresenter {
         W: Write + 'static,
     {
         Self {
-            show_app: opts.app.is_none(),
-            show_operation: opts.operation.is_none(),
+            show_app: opts.function_app.len() != 1,
+            show_operation: opts.function.len() != 1,
             output: Box::new(RefCell::new(output)),
         }
     }
@@ -80,9 +80,9 @@ mod tests {
     use std::rc::Rc;
 
     use super::ColorTextPresenter;
+    use crate::assembly::functions::traces_row_to_entry;
     use crate::options::cli_opts;
     use crate::output::Presenter;
-    use crate::source::appsinsight::appinsights_row_to_entry;
     use crate::testing::*;
     use colored::Colorize;
     use serde_json::json;
@@ -117,7 +117,7 @@ mod tests {
 
     #[test]
     fn naming_the_function_excludes_it_from_the_log() {
-        let opts = cli_opts(base_args().chain(vec!["--operation", "ze-operation"])).unwrap();
+        let opts = cli_opts(base_args().chain(vec!["--function", "ze-operation"])).unwrap();
         let buf = Rc::new(RefCell::new(Vec::new()));
         let output = WriterWrapper { buf: buf.clone() };
         let presenter = ColorTextPresenter::new(output, &opts);
@@ -127,7 +127,7 @@ mod tests {
 
     #[test]
     fn naming_the_app_excludes_if_from_the_log() {
-        let opts = cli_opts(base_args().chain(vec!["--app", "ze-app"])).unwrap();
+        let opts = cli_opts(base_args().chain(vec!["--function-app", "ze-app"])).unwrap();
         let buf = Rc::new(RefCell::new(Vec::new()));
         let output = WriterWrapper { buf: buf.clone() };
         let presenter = ColorTextPresenter::new(output, &opts);
@@ -137,9 +137,9 @@ mod tests {
 
     #[test]
     fn logs_have_color() {
-        let mut row = raw();
+        let mut row = example_traces_row();
         row.insert("severityLevel".to_owned(), json!(2));
-        let entry = appinsights_row_to_entry(row);
+        let entry = traces_row_to_entry(row);
         let opts = cli_opts(base_args()).unwrap();
         let buf = Rc::new(RefCell::new(Vec::new()));
         let output = WriterWrapper { buf: buf.clone() };

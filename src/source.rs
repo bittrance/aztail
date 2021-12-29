@@ -7,7 +7,7 @@ use serde_json::{map::Map, value::Value};
 pub mod appsinsight;
 pub mod opsinsight;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Level {
     Verbose,
     Info,
@@ -17,12 +17,12 @@ pub enum Level {
 
 #[derive(Clone, Debug)]
 pub struct LogEntry {
-    timestamp: DateTime<FixedOffset>,
-    group: String,
-    unit: String,
-    level: Level,
-    message: String,
-    raw: Map<String, Value>,
+    pub timestamp: DateTime<FixedOffset>,
+    pub group: String,
+    pub unit: String,
+    pub level: Level,
+    pub message: String,
+    pub raw: Map<String, Value>,
 }
 
 impl LogEntry {

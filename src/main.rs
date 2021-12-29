@@ -1,11 +1,11 @@
-use crate::kusto::{Eq, Filter, Operator, Ordering, Query, Timespan};
+use crate::assembly::build_sources;
 use crate::output::{ColorTextPresenter, Presenter, PrettyJsonPresenter};
-use crate::source::{appsinsight::appinsights_row_to_entry, appsinsight::AppInsights, LogSource};
 use anyhow::Result;
 use std::io::stdout;
 use std::time::Duration;
 use thiserror::Error;
 
+mod assembly;
 mod kusto;
 mod options;
 mod output;
@@ -19,6 +19,11 @@ mod util;
 pub enum AzTailError {
     #[error("No more entries")]
     Break,
+    // Option parsing
+    #[error("Use one of --app-id or --workspace")]
+    AppInsightsOrLogAnalytics,
+    #[error("Service exports to Log Analytics; please use --workspace")]
+    LogAnalyticsService,
     #[error("Invalid output format: {0}")]
     InvalidOutputFormat(String),
 }
@@ -32,45 +37,16 @@ fn build_presenter(opts: &options::Opts) -> Box<dyn Presenter> {
     }
 }
 
-fn build_operators(opts: &options::Opts) -> Vec<Box<dyn Operator>> {
-    let mut operators: Vec<Box<dyn Operator>> = Vec::new();
-    if opts.app.is_some() {
-        operators.push(Box::new(Filter::new(Eq::new(
-            "cloud_RoleName".to_owned(),
-            opts.app.clone().unwrap(),
-        ))));
-    }
-    if opts.operation.is_some() {
-        operators.push(Box::new(Filter::new(Eq::new(
-            "operation_Name".to_owned(),
-            opts.operation.clone().unwrap(),
-        ))));
-    }
-    operators.push(Box::new(Ordering::new("timestamp".to_owned())));
-    operators
-}
-
 #[tokio::main]
 async fn main() -> Result<()> {
     let opts = options::cli_opts(std::env::args())?;
     #[cfg(windows)]
     colored::control::set_virtual_terminal(true).unwrap();
-
-    let operators = build_operators(&opts);
-    let query = Query::new(
-        "traces".to_owned(),
-        Timespan::new("timestamp".to_owned(), opts.start_time, opts.end_time),
-        operators,
-    );
-    let log_source: Box<dyn LogSource> = Box::new(AppInsights::new(
-        query,
-        Box::new(appinsights_row_to_entry),
-        opts.clone(),
-    ));
+    let log_sources = build_sources(&opts);
     let presenter = build_presenter(&opts);
     match util::repeater(
         Duration::from_secs(10),
-        (vec![log_source], presenter, opts.follow),
+        (log_sources, presenter, opts.follow),
         querier::querier,
     )
     .await

@@ -53,6 +53,13 @@ impl Filter {
             expression: Box::new(expression),
         }
     }
+
+    pub fn boxed<T>(expression: T) -> Box<Self>
+    where
+        T: Expression,
+    {
+        Box::new(Self::new(expression))
+    }
 }
 
 impl Operator for Filter {}
@@ -63,7 +70,7 @@ impl Display for Filter {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Timespan {
     field: String,
     start_time: Option<DateTime<FixedOffset>>,
@@ -113,6 +120,10 @@ impl Ordering {
     pub fn new(field: String) -> Self {
         Self { field }
     }
+
+    pub fn boxed(field: String) -> Box<dyn Operator> {
+        Box::new(Self::new(field)) as Box<dyn Operator>
+    }
 }
 
 impl Operator for Ordering {}
@@ -135,6 +146,10 @@ impl Eq {
     pub fn new(field: String, value: String) -> Self {
         Self { field, value }
     }
+
+    pub fn boxed(field: String, value: String) -> Box<dyn Expression> {
+        Box::new(Self::new(field, value)) as Box<dyn Expression>
+    }
 }
 
 impl Expression for Eq {}
@@ -142,6 +157,54 @@ impl Expression for Eq {}
 impl Display for Eq {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{} == '{}'", self.field, self.value)
+    }
+}
+
+#[derive(Debug)]
+pub struct StartsWith {
+    field: String,
+    value: String,
+}
+
+impl StartsWith {
+    pub fn new(field: String, value: String) -> Self {
+        Self { field, value }
+    }
+
+    pub fn boxed(field: String, value: String) -> Box<dyn Expression> {
+        Box::new(Self::new(field, value)) as Box<dyn Expression>
+    }
+}
+
+impl Expression for StartsWith {}
+
+impl Display for StartsWith {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{} startswith_cs '{}'", self.field, self.value)
+    }
+}
+
+#[derive(Debug)]
+pub struct EndsWith {
+    field: String,
+    value: String,
+}
+
+impl EndsWith {
+    pub fn new(field: String, value: String) -> Self {
+        Self { field, value }
+    }
+
+    pub fn boxed(field: String, value: String) -> Box<dyn Expression> {
+        Box::new(Self::new(field, value)) as Box<dyn Expression>
+    }
+}
+
+impl Expression for EndsWith {}
+
+impl Display for EndsWith {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{} endswith_cs '{}'", self.field, self.value)
     }
 }
 
@@ -284,6 +347,7 @@ mod test {
         assert_that(&format!("{}", subject)).is_equal_to(&format!("ze-field >= datetime({})", T1));
     }
 
+    #[test]
     fn gt() {
         let subject = Gt::new("ze-field".to_owned(), T1.parse().unwrap());
         assert_that(&format!("{}", subject)).is_equal_to(&format!("ze-field > datetime({})", T1));
