@@ -183,15 +183,15 @@ fn opsinsights_requests_message_line(row: &Map<String, Value>) -> String {
 #[cfg(test)]
 mod test {
     use super::appinsights_requests_row_to_entry;
-    use super::{appinsights_requests_row_to_entry, opsinsights_requests_row_to_entry};
+    use super::opsinsights_requests_row_to_entry;
+    use crate::examples::{apprequests_functions_row, requests_http_row};
     use crate::source::Level;
-    use crate::{source::Level, testing::example_requests_row};
     use serde_json::Value;
     use speculoos::prelude::*;
 
     #[test]
     fn requests_row_to_entry_sets_log_level() {
-        let mut row = example_requests_row();
+        let mut row = requests_http_row();
         assert_that(&appinsights_requests_row_to_entry(row.clone()).level())
             .is_equal_to(Level::Info);
         row.insert("success".to_owned(), Value::String("False".to_owned()));
@@ -200,14 +200,14 @@ mod test {
 
     #[test]
     fn requests_row_to_entry_group_and_unit() {
-        let res = appinsights_requests_row_to_entry(example_requests_row());
+        let res = appinsights_requests_row_to_entry(requests_http_row());
         assert_that(&res.group()).contains("aztail-apim");
         assert_that(&res.unit()).contains("get-ping");
     }
 
     #[test]
     fn requests_row_to_entry_contains_url() {
-        let res = appinsights_requests_row_to_entry(example_requests_row());
+        let res = appinsights_requests_row_to_entry(requests_http_row());
         assert_that(&res.message()).contains("\"https://aztail-apim");
     }
 

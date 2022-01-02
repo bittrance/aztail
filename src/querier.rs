@@ -43,6 +43,7 @@ pub async fn querier((mut sources, presenter, follow): QuerierArgs) -> Result<Qu
 #[cfg(test)]
 mod test {
     use super::querier;
+    use crate::examples::{T1, T2, T3, T4};
     use crate::kusto::Timespan;
     use crate::testing::*;
     use anyhow::Result;

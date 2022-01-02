@@ -299,7 +299,7 @@ impl Display for Or {
 #[cfg(test)]
 mod test {
     use super::{Eq, Filter, Ge, Gt, Lt, Or, Ordering, Query, Timespan};
-    use crate::testing::{T1, T2};
+    use crate::examples::{T1, T2};
     use speculoos::prelude::*;
 
     #[test]

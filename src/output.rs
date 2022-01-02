@@ -81,6 +81,7 @@ mod tests {
 
     use super::ColorTextPresenter;
     use crate::assembly::functions::traces_row_to_entry;
+    use crate::examples::{traces_functions_row, T1};
     use crate::options::cli_opts;
     use crate::output::Presenter;
     use crate::testing::*;
@@ -137,7 +138,7 @@ mod tests {
 
     #[test]
     fn logs_have_color() {
-        let mut row = example_traces_row();
+        let mut row = traces_functions_row();
         row.insert("severityLevel".to_owned(), json!(2));
         let entry = traces_row_to_entry(row);
         let opts = cli_opts(base_args()).unwrap();

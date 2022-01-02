@@ -6,6 +6,8 @@ use std::time::Duration;
 use thiserror::Error;
 
 mod assembly;
+#[cfg(test)]
+mod examples;
 mod kusto;
 mod options;
 mod output;
