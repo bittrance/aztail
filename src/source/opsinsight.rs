@@ -63,13 +63,19 @@ impl LogSource for OpsLogs {
                     .into_iter()
                     .map(|c| c.name.unwrap_or_else(|| "unnamed".to_string()))
                     .collect();
-                table.rows.into_iter().map(move |row| {
-                    fields
-                        .clone()
-                        .into_iter()
-                        .zip(row.into_iter().map(Value::String))
-                        .collect::<Map<String, Value>>()
-                })
+                table
+                    .rows
+                    .as_array()
+                    .cloned()
+                    .unwrap()
+                    .into_iter()
+                    .map(move |row| {
+                        fields
+                            .clone()
+                            .into_iter()
+                            .zip(row.as_array().cloned().unwrap())
+                            .collect::<Map<String, Value>>()
+                    })
             })
             .map(move |row| adapter(row));
         Ok(Box::new(log_entries))

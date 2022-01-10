@@ -73,7 +73,7 @@ dependencies = [
 [[package]]
 name = "azure_core"
 version = "0.1.0"
-source = "git+https://github.com/Azure/azure-sdk-for-rust?rev=c5b5e9d8#c5b5e9d86ba8a14586faefaaf8e3cc155c73a24c"
+source = "git+https://github.com/Azure/azure-sdk-for-rust?rev=21e23649#21e23649f0fd7d10fddfb5bf54ea94dcc13e0eb0"
 dependencies = [
  "async-trait",
  "base64",
@@ -99,7 +99,7 @@ dependencies = [
 [[package]]
 name = "azure_identity"
 version = "0.1.0"
-source = "git+https://github.com/Azure/azure-sdk-for-rust?rev=c5b5e9d8#c5b5e9d86ba8a14586faefaaf8e3cc155c73a24c"
+source = "git+https://github.com/Azure/azure-sdk-for-rust?rev=21e23649#21e23649f0fd7d10fddfb5bf54ea94dcc13e0eb0"
 dependencies = [
  "async-timer",
  "async-trait",
@@ -118,7 +118,7 @@ dependencies = [
 [[package]]
 name = "azure_svc_applicationinsights"
 version = "0.1.0"
-source = "git+https://github.com/Azure/azure-sdk-for-rust?rev=c5b5e9d8#c5b5e9d86ba8a14586faefaaf8e3cc155c73a24c"
+source = "git+https://github.com/Azure/azure-sdk-for-rust?rev=21e23649#21e23649f0fd7d10fddfb5bf54ea94dcc13e0eb0"
 dependencies = [
  "azure_core",
  "bytes",
@@ -133,7 +133,7 @@ dependencies = [
 [[package]]
 name = "azure_svc_operationalinsights"
 version = "0.1.0"
-source = "git+https://github.com/Azure/azure-sdk-for-rust?rev=c5b5e9d8#c5b5e9d86ba8a14586faefaaf8e3cc155c73a24c"
+source = "git+https://github.com/Azure/azure-sdk-for-rust?rev=21e23649#21e23649f0fd7d10fddfb5bf54ea94dcc13e0eb0"
 dependencies = [
  "azure_core",
  "bytes",
