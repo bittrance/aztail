@@ -55,6 +55,9 @@ pub struct Opts {
     /// One of text, json
     #[clap(long, default_value = "text")]
     pub format: OutputFormat,
+    /// Debug log all entries receiverd
+    #[clap(long)]
+    pub debug: bool,
 
     // Azure Functions
     /// Show only logs for a specific app

@@ -42,6 +42,7 @@ impl OpsLogs {
 #[async_trait]
 impl LogSource for OpsLogs {
     async fn stream(&self) -> Result<Box<dyn Iterator<Item = LogEntry>>> {
+        let debug = self.opts.debug;
         let body = QueryBody {
             query: format!("{}", self.query),
             timespan: None,
@@ -76,6 +77,11 @@ impl LogSource for OpsLogs {
                             .zip(row.as_array().cloned().unwrap())
                             .collect::<Map<String, Value>>()
                     })
+            })
+            .inspect(move |row| {
+                if debug {
+                    eprintln!("{:?}", row);
+                }
             })
             .map(move |row| adapter(row));
         Ok(Box::new(log_entries))
