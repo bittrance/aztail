@@ -2,7 +2,9 @@ resource "azurerm_application_insights" "apim_insights" {
   name                = "aztail-apim-appinsights"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
+  workspace_id        = azurerm_log_analytics_workspace.logs.id
   application_type    = "web"
+  disable_ip_masking  = true
 }
 
 resource "azurerm_api_management" "apim" {
