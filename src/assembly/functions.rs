@@ -8,13 +8,10 @@ use crate::{
 
 use super::{unwrap_as_rfc3339, unwrap_as_str};
 
-pub fn appinsights_functions(opts: &Opts) -> impl IntoIterator<Item = Box<dyn LogSource>> {
-    if opts.app_id.is_none() || !opts.requested_services().contains(&Service::Functions) {
-        return None;
-    }
+fn appsinsights_functions_query(opts: &Opts) -> Query {
     let timespan = Timespan::new("timestamp".to_owned(), opts.start_time, opts.end_time);
     let mut operators: Vec<Box<dyn Operator>> = Vec::new();
-    if !opts.api_name.is_empty() {
+    if !opts.function_app.is_empty() {
         operators.push(Filter::boxed(Or::new(
             opts.function_app
                 .iter()
@@ -23,7 +20,7 @@ pub fn appinsights_functions(opts: &Opts) -> impl IntoIterator<Item = Box<dyn Lo
                 .collect(),
         )));
     }
-    if !opts.api_operation.is_empty() {
+    if !opts.function.is_empty() {
         operators.push(Filter::boxed(Or::new(
             opts.function
                 .iter()
@@ -33,9 +30,15 @@ pub fn appinsights_functions(opts: &Opts) -> impl IntoIterator<Item = Box<dyn Lo
         )));
     }
     operators.push(Ordering::boxed("timestamp".to_owned()));
-    let query = Query::new("traces".to_owned(), timespan, operators);
+    Query::new("traces".to_owned(), timespan, operators)
+}
+
+pub fn appinsights_functions(opts: &Opts) -> impl IntoIterator<Item = Box<dyn LogSource>> {
+    if opts.app_id.is_none() || !opts.requested_services().contains(&Service::Functions) {
+        return None;
+    }
     Some(AppInsights::boxed(
-        query,
+        appsinsights_functions_query(&opts),
         Box::new(traces_row_to_entry),
         opts.clone(),
     ))
@@ -62,13 +65,10 @@ pub fn traces_row_to_entry(row: Map<String, Value>) -> LogEntry {
     }
 }
 
-pub fn opsinsights_functions(opts: &Opts) -> impl IntoIterator<Item = Box<dyn LogSource>> {
-    if opts.workspace.is_none() || !opts.requested_services().contains(&Service::Functions) {
-        return None;
-    }
+fn opsinsights_functions_query(opts: &Opts) -> Query {
     let timespan = Timespan::new("TimeGenerated".to_owned(), opts.start_time, opts.end_time);
     let mut operators: Vec<Box<dyn Operator>> = Vec::new();
-    if !opts.api_name.is_empty() {
+    if !opts.function_app.is_empty() {
         operators.push(Filter::boxed(Or::new(
             opts.function_app
                 .iter()
@@ -77,7 +77,7 @@ pub fn opsinsights_functions(opts: &Opts) -> impl IntoIterator<Item = Box<dyn Lo
                 .collect(),
         )));
     }
-    if !opts.api_operation.is_empty() {
+    if !opts.function.is_empty() {
         operators.push(Filter::boxed(Or::new(
             opts.function
                 .iter()
@@ -87,9 +87,15 @@ pub fn opsinsights_functions(opts: &Opts) -> impl IntoIterator<Item = Box<dyn Lo
         )));
     }
     operators.push(Ordering::boxed("TimeGenerated".to_owned()));
-    let query = Query::new("AppTraces".to_owned(), timespan, operators);
+    Query::new("AppTraces".to_owned(), timespan, operators)
+}
+
+pub fn opsinsights_functions(opts: &Opts) -> impl IntoIterator<Item = Box<dyn LogSource>> {
+    if opts.workspace.is_none() || !opts.requested_services().contains(&Service::Functions) {
+        return None;
+    }
     Some(OpsLogs::boxed(
-        query,
+        opsinsights_functions_query(&opts),
         Box::new(apptraces_row_to_entry),
         opts.clone(),
     ))
@@ -119,7 +125,9 @@ fn apptraces_row_to_entry(row: Map<String, Value>) -> LogEntry {
 #[cfg(test)]
 mod test {
     use super::traces_row_to_entry;
-    use crate::{examples::traces_functions_row, source::Level};
+    use crate::{
+        examples::traces_functions_row, options::cli_opts, source::Level, testing::base_args,
+    };
     use speculoos::prelude::*;
 
     #[test]
@@ -127,5 +135,21 @@ mod test {
         let row = traces_functions_row();
         let res = traces_row_to_entry(row);
         assert_that(&res.level()).is_equal_to(Level::Info);
+    }
+
+    #[test]
+    fn appsinsights_functions_respects_filters() {
+        let args = base_args().chain(vec!["--function-app", "ze-app"]);
+        let opts = cli_opts(args).unwrap();
+        let query = super::appsinsights_functions_query(&opts);
+        assert_that(&query.to_string()).contains("ze-app");
+    }
+
+    #[test]
+    fn opsinsights_functions_respects_filters() {
+        let args = base_args().chain(vec!["--function", "ze-func"]);
+        let opts = cli_opts(args).unwrap();
+        let query = super::opsinsights_functions_query(&opts);
+        assert_that(&query.to_string()).contains("ze-func");
     }
 }
