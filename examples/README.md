@@ -2,7 +2,7 @@
 
 This page document how the standard aztail concepts are mapped to tables and columns in Azure Monitoring.
 
-## Legacy Application Insights
+## Azure Functions on Application Insights
 
 | Datum     | Field          | Arg            |
 | --------- | -------------- | -------------- |
@@ -13,7 +13,7 @@ This page document how the standard aztail concepts are mapped to tables and col
 | Level     | severityLevel  |                |
 | Message   | message        |                |
 
-## Function on Log Analytics
+## Azure Functions on Log Analytics
 
 | Datum     | Field         | Arg            |
 | --------- | ------------- | -------------- |
@@ -24,7 +24,7 @@ This page document how the standard aztail concepts are mapped to tables and col
 | Level     | severityLevel |                |
 | Message   | Message       |                |
 
-## Container instances
+## Container instances - TBD
 
 | Datum     | Field                   | Arg               |
 | --------- | ----------------------- | ----------------- |
@@ -84,7 +84,7 @@ Resources:
 
 - [1] We may want to warn that some exceptions may be excluded
 
-## Logic App
+## Logic App - TBD
 
 | Datum     | Field                    | Arg        |
 | --------- | ------------------------ | ---------- |
@@ -94,7 +94,7 @@ Resources:
 | Unit      | Resource                 | ?          |
 | Message   | OperationName + status_s |            |
 
-## Azure Linux VM with OMS logging to Syslog
+## Azure Linux VM with OMS logging to Syslog - TBD
 
 | Datum     | Field                     | Arg        |
 | --------- | ------------------------- | ---------- |
