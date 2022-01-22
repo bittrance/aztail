@@ -1,0 +1,130 @@
+# The configurations that used for the recording, feel free to edit them
+config:
+  # Specify a command to be executed
+  # like `/bin/bash -l`, `ls`, or any other commands
+  # the default is bash for Linux
+  # or powershell.exe for Windows
+  command: /usr/bin/fish
+
+  # Specify the current working directory path
+  # the default is the current working directory path
+  cwd: /home/bittrance/projects/personal/aztail
+
+  # Export additional ENV variables
+  env:
+    recording: true
+
+  # Explicitly set the number of columns
+  # or use `auto` to take the current
+  # number of columns of your shell
+  cols: 200
+
+  # Explicitly set the number of rows
+  # or use `auto` to take the current
+  # number of rows of your shell
+  rows: 35
+
+  # Amount of times to repeat GIF
+  # If value is -1, play once
+  # If value is 0, loop indefinitely
+  # If value is a positive number, loop n times
+  repeat: -1
+
+  # Quality
+  # 1 - 100
+  quality: 100
+
+  # Delay between frames in ms
+  # If the value is `auto` use the actual recording delays
+  frameDelay: auto
+
+  # Maximum delay between frames in ms
+  # Ignored if the `frameDelay` isn't set to `auto`
+  # Set to `auto` to prevent limiting the max idle time
+  maxIdleTime: 2000
+
+  # The surrounding frame box
+  # The `type` can be null, window, floating, or solid`
+  # To hide the title use the value null
+  # Don't forget to add a backgroundColor style with a null as type
+  frameBox:
+    type: floating
+    title: aztail demo
+    style:
+      border: 0px black solid
+      # boxShadow: none
+      # margin: 0px
+
+  # Add a watermark image to the rendered gif
+  # You need to specify an absolute path for
+  # the image on your machine or a URL, and you can also
+  # add your own CSS styles
+  watermark:
+    imagePath: null
+    style:
+      position: absolute
+      right: 15px
+      bottom: 15px
+      width: 100px
+      opacity: 0.9
+
+  # Cursor style can be one of
+  # `block`, `underline`, or `bar`
+  cursorStyle: block
+
+  # Font family
+  # You can use any font that is installed on your machine
+  # in CSS-like syntax
+  fontFamily: "Monaco, Lucida Console, Ubuntu Mono, Monospace"
+
+  # The size of the font
+  fontSize: 12
+
+  # The height of lines
+  lineHeight: 1
+
+  # The spacing between letters
+  letterSpacing: 0
+
+  # Theme
+  theme:
+    background: "transparent"
+    foreground: "#afafaf"
+    cursor: "#c7c7c7"
+    black: "#232628"
+    red: "#fc4384"
+    green: "#b3e33b"
+    yellow: "#ffa727"
+    blue: "#75dff2"
+    magenta: "#ae89fe"
+    cyan: "#708387"
+    white: "#d5d5d0"
+    brightBlack: "#626566"
+    brightRed: "#ff7fac"
+    brightGreen: "#c8ed71"
+    brightYellow: "#ebdf86"
+    brightBlue: "#75dff2"
+    brightMagenta: "#ae89fe"
+    brightCyan: "#b1c6ca"
+    brightWhite: "#f9f9f4"
+
+# Records, feel free to edit them
+records:
+  - delay: 588
+    content: "Welcome to fish, the friendly interactive shell\r\nType \e[32mhelp\e[m\x0F for instructions on how to use fish\r\n\e[?2004h\e]0;fish /home/bittrance/projects/personal/aztail\a\e[30m\e[m\x0F\r\e[35m[\e[m\x0F22:17\e[35m] \e[m\x0F\e[K\r\e[190C\e[35m[\e[36m\e[35m|\e[m\x0F\e[33maztail\e[m\x0F\e[35m] \e[m\x0F\r\e[190C\r\e[8C"
+  - delay: 1459
+    content: "a\r\e[190C\e[35m[\e[36m\e[35m|\e[m\x0F\e[33maztail\e[m\x0F\e[35m] \e[m\x0F\r\e[190C\r\e[9C\b\e[31ma\r\e[190C\e[30m\e[m\x0F\e[35m[\e[36m\e[35m|\e[m\x0F\e[33maztail\e[m\x0F\e[35m] \e[m\x0F\r\e[190C\r\e[9C\e[90mztail --workspace ff680162-2137-44ed-8eb0-aa7bd881266e --start-time='-2 min' --follow\r\e[190C\e[30m\e[m\x0F\e[35m[\e[36m\e[35m|\e[m\x0F\e[33maztail\e[m\x0F\e[35m] \e[m\x0F\r\e[190C\r\e[9C"
+  - delay: 516
+    content: "\e[31mz\e[90mtail --workspace ff680162-2137-44ed-8eb0-aa7bd881266e --start-time='-2 min' --follow\r\e[190C\e[30m\e[m\x0F\e[35m[\e[36m\e[35m|\e[m\x0F\e[33maztail\e[m\x0F\e[35m] \e[m\x0F\r\e[190C\r\e[10C\b\b\e[36maz\e[90mtail --workspace ff680162-2137-44ed-8eb0-aa7bd881266e --start-time='-2 min' --follow\r\e[190C\e[30m\e[m\x0F\e[35m[\e[36m\e[35m|\e[m\x0F\e[33maztail\e[m\x0F\e[35m] \e[m\x0F\r\e[190C\r\e[10C"
+  - delay: 390
+    content: "\e[36mtail --workspace ff680162-2137-44ed-8eb0-aa7bd881266e --start-time='-2 min' --follow\r\e[190C\e[30m\e[m\x0F\e[35m[\e[36m\e[35m|\e[m\x0F\e[33maztail\e[m\x0F\e[35m] \e[m\x0F\r\e[190C\r\e[94C\e[80D \e[36m--workspace\e[30m\e[m\x0F \e[36mff680162-2137-44ed-8eb0-aa7bd881266e\e[30m\e[m\x0F \e[36m--start-time=\e[33m'-2 min'\e[30m\e[m\x0F \e[36m--follow\r\e[190C\e[30m\e[m\x0F\e[35m[\e[36m\e[35m|\e[m\x0F\e[33maztail\e[m\x0F\e[35m] \e[m\x0F\r\e[190C\r\e[94C"
+  - delay: 1378
+    content: "\r\e[190C\e[35m[\e[36m\e[35m|\e[m\x0F\e[33maztail\e[m\x0F\e[35m] \e[m\x0F\r\e[190C\r\e[94C\r\n\e[30m\e[m\x0F\e[?2004l\e]0;aztail --workspace ff680162-2137-44ed-8eb0-aa7bd881266e --start-time='-2 min' --follow /home/bittrance/projects/personal/aztail\a\e[30m\e[m\x0F\r"
+  - delay: 1393
+    content: "\e[32m2022-01-22 21:15:59.997Z\e[0m  \e[35maztail-function\e[0m  \e[36mlog-function\e[0m  \e[33m\"Timer fired at 2022-01-22T21:15:59.9972935+00:00\" result 0 took 8.7081 ms\e[0m\r\n\e[32m2022-01-22 21:15:59.997Z\e[0m  \e[35maztail-function\e[0m  \e[36mlog-function\e[0m  Executing 'Functions.log-function' (Reason='Timer fired at 2022-01-22T21:15:59.9972935+00:00', Id=622d353b-077f-4806-a0b8-aa3afedfb881)\r\n\e[32m2022-01-22 21:16:00.000Z\e[0m  \e[35maztail-function\e[0m  \e[36mlog-function\e[0m  2022-01-22T21:15:59.999Z General log message\r\n\e[32m2022-01-22 21:16:00.001Z\e[0m  \e[35maztail-function\e[0m  \e[36mlog-function\e[0m  \e[91m2022-01-22T21:15:59.999Z Error log message; oh no, badness!\e[0m\r\n\e[32m2022-01-22 21:16:00.001Z\e[0m  \e[35maztail-function\e[0m  \e[36mlog-function\e[0m  \e[33m2022-01-22T21:15:59.999Z Warning log message; be careful.\e[0m\r\n\e[32m2022-01-22 21:16:00.001Z\e[0m  \e[35maztail-function\e[0m  \e[36mlog-function\e[0m  2022-01-22T21:16:00.000Z Informational log message\r\n\e[32m2022-01-22 21:16:00.002Z\e[0m  \e[35maztail-function\e[0m  \e[36mlog-function\e[0m  Executed 'Functions.log-function' (Succeeded, Id=622d353b-077f-4806-a0b8-aa3afedfb881, Duration=4ms)\r\n"
+  - delay: 2685
+    content: "\e[32m2022-01-22 21:17:00.006Z\e[0m  \e[35maztail-function\e[0m  \e[36mlog-function\e[0m  \e[33m\"Timer fired at 2022-01-22T21:17:00.0060180+00:00\" result 0 took 7.0883 ms\e[0m\r\n"
+  - delay: 10035
+    content: "\e[32m2022-01-22 21:17:00.006Z\e[0m  \e[35maztail-function\e[0m  \e[36mlog-function\e[0m  Executing 'Functions.log-function' (Reason='Timer fired at 2022-01-22T21:17:00.0060180+00:00', Id=c3c5b7c5-da28-4e49-beb1-7e5d4eaa95c9)\r\n\e[32m2022-01-22 21:17:00.010Z\e[0m  \e[35maztail-function\e[0m  \e[36mlog-function\e[0m  2022-01-22T21:17:00.009Z General log message\r\n\e[32m2022-01-22 21:17:00.010Z\e[0m  \e[35maztail-function\e[0m  \e[36mlog-function\e[0m  \e[91m2022-01-22T21:17:00.009Z Error log message; oh no, badness!\e[0m\r\n\e[32m2022-01-22 21:17:00.011Z\e[0m  \e[35maztail-function\e[0m  \e[36mlog-function\e[0m  \e[33m2022-01-22T21:17:00.009Z Warning log message; be careful.\e[0m\r\n\e[32m2022-01-22 21:17:00.011Z\e[0m  \e[35maztail-function\e[0m  \e[36mlog-function\e[0m  2022-01-22T21:17:00.009Z Informational log message\r\n\e[32m2022-01-22 21:17:00.013Z\e[0m  \e[35maztail-function\e[0m  \e[36mlog-function\e[0m  Executed 'Functions.log-function' (Succeeded, Id=c3c5b7c5-da28-4e49-beb1-7e5d4eaa95c9, Duration=7ms)\r\n\e[32m2022-01-22 21:18:00.006Z\e[0m  \e[35maztail-function\e[0m  \e[36mlog-function\e[0m  Executing 'Functions.log-function' (Reason='Timer fired at 2022-01-22T21:18:00.0065542+00:00', Id=3625f58f-91c3-4b64-a366-abcf5f94dc62)\r\n\e[32m2022-01-22 21:18:00.009Z\e[0m  \e[35maztail-function\e[0m  \e[36mlog-function\e[0m  2022-01-22T21:18:00.009Z General log message\r\n\e[32m2022-01-22 21:18:00.010Z\e[0m  \e[35maztail-function\e[0m  \e[36mlog-function\e[0m  2022-01-22T21:18:00.009Z Informational log message\r\n\e[32m2022-01-22 21:18:00.010Z\e[0m  \e[35maztail-function\e[0m  \e[36mlog-function\e[0m  \e[91m2022-01-22T21:18:00.009Z Error log message; oh no, badness!\e[0m\r\n\e[32m2022-01-22 21:18:00.010Z\e[0m  \e[35maztail-function\e[0m  \e[36mlog-function\e[0m  \e[33m2022-01-22T21:18:00.009Z Warning log message; be careful.\e[0m\r\n\e[32m2022-01-22 21:18:00.012Z\e[0m  \e[35maztail-function\e[0m  \e[36mlog-function\e[0m  Executed 'Functions.log-function' (Succeeded, Id=3625f58f-91c3-4b64-a366-abcf5f94dc62, Duration=5ms)\r\n\e[32m2022-01-22 21:18:59.996Z\e[0m  \e[35maztail-function\e[0m  \e[36mlog-function\e[0m  Executing 'Functions.log-function' (Reason='Timer fired at 2022-01-22T21:18:59.9951588+00:00', Id=e3b37383-5ac4-451f-a46b-a67dc1df4cc7)\r\n\e[32m2022-01-22 21:19:00.002Z\e[0m  \e[35maztail-function\e[0m  \e[36mlog-function\e[0m  2022-01-22T21:19:00.000Z General log message\r\n\e[32m2022-01-22 21:19:00.003Z\e[0m  \e[35maztail-function\e[0m  \e[36mlog-function\e[0m  \e[91m2022-01-22T21:19:00.001Z Error log message; oh no, badness!\e[0m\r\n\e[32m2022-01-22 21:19:00.004Z\e[0m  \e[35maztail-function\e[0m  \e[36mlog-function\e[0m  \e[33m2022-01-22T21:19:00.001Z Warning log message; be careful.\e[0m\r\n\e[32m2022-01-22 21:19:00.005Z\e[0m  \e[35maztail-function\e[0m  \e[36mlog-function\e[0m  2022-01-22T21:19:00.001Z Informational log message\r\n\e[32m2022-01-22 21:19:00.008Z\e[0m  \e[35maztail-function\e[0m  \e[36mlog-function\e[0m  Executed 'Functions.log-function' (Succeeded, Id=e3b37383-5ac4-451f-a46b-a67dc1df4cc7, Duration=13ms)\r\n"
+  - delay: 8000
+    content: "^C\r\n\e[35m[\e[m\x0F22:17\e[35m] "

@@ -1,15 +1,15 @@
 # aztail - cli to retrieve Azure logs
 
-aztail is an opinionated tool to retrieve logs from Azure App Insights and Azure Monitor Logs (also known as Log Analytics). When debugging, you typically want to retrieve a the logs as a stream. These services are exposed as databases, making this harder than it should be. aztail retrieves records from these databases and presents them as a log stream, picking fields that are likely to be relevant. It allows you to focus your It also allows you to "tail" a log stream.
+aztail is an opinionated tool to retrieve logs from Azure App Insights and Azure Monitor Logs (also known as Log Analytics). These services are exposed as databases, but when debugging, you typically want to retrieve a the logs as a stream. aztail retrieves records from these databases and presents them as a log stream, picking fields that are likely to be relevant for each particular service. It also allows you to "tail" a log stream.
+
+![aztail demo](./assets/aztail-min.gif)
 
 Currently supported Azure services:
 
 - Azure Functions
 - Azure API Management
 
-See the [sources](./examples/README.md) page for details on how filters are applied and what data is retrieved.
-
-aztail is inspired by [awslogs](https://github.com/jorgebastida/awslogs).
+Several more services are in the works:s see the [sources](./examples/README.md) page for details on how filters are applied and what data is retrieved.
 
 ## Install
 
@@ -84,3 +84,7 @@ Contributions are welcome. Please file an issue and/or a pull request.
 ## License
 
 For the time being, aztail is licensed under [GPLv3](./LICENSE). If you have a use case that is hampered by this license, please file an issue.
+
+## Credits
+
+aztail is inspired by [awslogs](https://github.com/jorgebastida/awslogs).
