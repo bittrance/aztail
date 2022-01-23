@@ -4,7 +4,7 @@ use crate::options::{Opts, Service};
 use crate::source::{appsinsight::AppInsights, opsinsight::OpsLogs, Level, LogEntry, LogSource};
 use serde_json::{json, Map, Value};
 
-pub fn appinsights_api_management(opts: &Opts) -> impl IntoIterator<Item = Box<dyn LogSource>> {
+pub fn appinsights(opts: &Opts) -> impl IntoIterator<Item = Box<dyn LogSource>> {
     if opts.app_id.is_none() || !opts.requested_services().contains(&Service::APIManagement) {
         return None;
     }
@@ -92,7 +92,7 @@ fn appsinsights_requests_message_line(row: &Map<String, Value>) -> String {
     }
 }
 
-pub fn opsinsights_api_management(opts: &Opts) -> impl IntoIterator<Item = Box<dyn LogSource>> {
+pub fn opsinsights(opts: &Opts) -> impl IntoIterator<Item = Box<dyn LogSource>> {
     if opts.workspace.is_none() || !opts.requested_services().contains(&Service::APIManagement) {
         return None;
     }

@@ -48,7 +48,7 @@ impl LogSource for OpsLogs {
             eprintln!("{}", query);
         }
         let body = QueryBody {
-            query: query,
+            query,
             timespan: None,
             workspaces: None,
         };

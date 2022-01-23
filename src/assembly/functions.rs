@@ -33,12 +33,12 @@ fn appsinsights_functions_query(opts: &Opts) -> Query {
     Query::new("traces".to_owned(), timespan, operators)
 }
 
-pub fn appinsights_functions(opts: &Opts) -> impl IntoIterator<Item = Box<dyn LogSource>> {
+pub fn appinsights(opts: &Opts) -> impl IntoIterator<Item = Box<dyn LogSource>> {
     if opts.app_id.is_none() || !opts.requested_services().contains(&Service::Functions) {
         return None;
     }
     Some(AppInsights::boxed(
-        appsinsights_functions_query(&opts),
+        appsinsights_functions_query(opts),
         Box::new(traces_row_to_entry),
         opts.clone(),
     ))
@@ -90,12 +90,12 @@ fn opsinsights_functions_query(opts: &Opts) -> Query {
     Query::new("AppTraces".to_owned(), timespan, operators)
 }
 
-pub fn opsinsights_functions(opts: &Opts) -> impl IntoIterator<Item = Box<dyn LogSource>> {
+pub fn opsinsights(opts: &Opts) -> impl IntoIterator<Item = Box<dyn LogSource>> {
     if opts.workspace.is_none() || !opts.requested_services().contains(&Service::Functions) {
         return None;
     }
     Some(OpsLogs::boxed(
-        opsinsights_functions_query(&opts),
+        opsinsights_functions_query(opts),
         Box::new(apptraces_row_to_entry),
         opts.clone(),
     ))

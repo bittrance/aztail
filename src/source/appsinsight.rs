@@ -48,7 +48,7 @@ impl LogSource for AppInsights {
             eprintln!("{}", query);
         }
         let body = QueryBody {
-            query: query,
+            query,
             timespan: None,
             applications: None,
         };

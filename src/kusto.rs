@@ -235,6 +235,7 @@ pub struct Ge {
 }
 
 impl Ge {
+    #[allow(dead_code)]
     pub fn new(field: String, value: String) -> Self {
         Self { field, value }
     }
