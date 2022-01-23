@@ -9,7 +9,7 @@ Currently supported Azure services:
 - Azure Functions
 - Azure API Management
 
-Several more services are in the works:s see the [sources](./examples/README.md) page for details on how filters are applied and what data is retrieved.
+Several more services are in the works: see the [sources](./examples/README.md) page for details on how filters are applied and what data is retrieved.
 
 ## Install
 

@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, FixedOffset};
 use serde_json::{map::Map, value::Value};
 
-pub mod appsinsight;
+pub mod appinsight;
 pub mod opsinsight;
 
 #[derive(Clone, Copy, Debug, PartialEq)]

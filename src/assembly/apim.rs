@@ -1,7 +1,7 @@
 use crate::assembly::{unwrap_as_rfc3339, unwrap_as_str};
 use crate::kusto::{EndsWith, Filter, Operator, Or, Ordering, Query, StartsWith, Timespan};
 use crate::options::{Opts, Service};
-use crate::source::{appsinsight::AppInsights, opsinsight::OpsLogs, Level, LogEntry, LogSource};
+use crate::source::{appinsight::AppInsights, opsinsight::OpsLogs, Level, LogEntry, LogSource};
 use serde_json::{json, Map, Value};
 
 pub fn appinsights(opts: &Opts) -> impl IntoIterator<Item = Box<dyn LogSource>> {
@@ -54,7 +54,7 @@ pub fn appinsights_requests_row_to_entry(row: Map<String, Value>) -> LogEntry {
     } else {
         Level::Warn
     };
-    let message = appsinsights_requests_message_line(&row);
+    let message = appinsights_requests_message_line(&row);
     LogEntry {
         timestamp,
         group,
@@ -65,7 +65,7 @@ pub fn appinsights_requests_row_to_entry(row: Map<String, Value>) -> LogEntry {
     }
 }
 
-fn appsinsights_requests_message_line(row: &Map<String, Value>) -> String {
+fn appinsights_requests_message_line(row: &Map<String, Value>) -> String {
     let url = unwrap_as_str(row.get("url"));
     let status_code = unwrap_as_str(row.get("resultCode"));
     let dimensions: Map<String, Value> =

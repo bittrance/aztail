@@ -3,12 +3,12 @@ use serde_json::{Map, Value};
 use crate::{
     kusto::{Eq, Filter, Operator, Or, Ordering, Query, Timespan},
     options::{Opts, Service},
-    source::{appsinsight::AppInsights, opsinsight::OpsLogs, Level, LogEntry, LogSource},
+    source::{appinsight::AppInsights, opsinsight::OpsLogs, Level, LogEntry, LogSource},
 };
 
 use super::{unwrap_as_rfc3339, unwrap_as_str};
 
-fn appsinsights_functions_query(opts: &Opts) -> Query {
+fn appinsights_functions_query(opts: &Opts) -> Query {
     let timespan = Timespan::new("timestamp".to_owned(), opts.start_time, opts.end_time);
     let mut operators: Vec<Box<dyn Operator>> = Vec::new();
     if !opts.function_app.is_empty() {
@@ -38,7 +38,7 @@ pub fn appinsights(opts: &Opts) -> impl IntoIterator<Item = Box<dyn LogSource>> 
         return None;
     }
     Some(AppInsights::boxed(
-        appsinsights_functions_query(opts),
+        appinsights_functions_query(opts),
         Box::new(traces_row_to_entry),
         opts.clone(),
     ))
@@ -138,10 +138,10 @@ mod test {
     }
 
     #[test]
-    fn appsinsights_functions_respects_filters() {
+    fn appinsights_functions_respects_filters() {
         let args = base_args().chain(vec!["--function-app", "ze-app"]);
         let opts = cli_opts(args).unwrap();
-        let query = super::appsinsights_functions_query(&opts);
+        let query = super::appinsights_functions_query(&opts);
         assert_that(&query.to_string()).contains("ze-app");
     }
 

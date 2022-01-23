@@ -32,9 +32,9 @@ impl FromStr for OutputFormat {
     }
 }
 
-/// Query tables in a App Insights or Log Analytics workspace and presents
+/// Query tables in a Application Insights or Log Analytics workspace and presents
 /// the result as a human-readable log stream. When executed with only an
-/// App ID or Workspace ID, aztail retrieves logs from all known services.
+/// Application ID or Workspace ID, aztail retrieves logs from all known services.
 /// If one or more filter arguments are used, only logs matching those
 /// filters will be retrieved. Multiple filters can be used and will
 /// retrieve the union of matching data.
@@ -42,7 +42,7 @@ impl FromStr for OutputFormat {
 #[derive(Clone, Debug, Parser)]
 #[clap(version = "0.8.0")]
 pub struct Opts {
-    /// The "Application ID" of the App Insight where logs reside
+    /// The "Application ID" of the Application Insights where logs reside
     #[clap(short, long)]
     pub app_id: Option<String>,
     /// The ID of the Log Analytics workspace where logs reside
