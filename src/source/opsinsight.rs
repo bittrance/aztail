@@ -45,7 +45,7 @@ impl LogSource for OpsLogs {
         let debug = self.opts.debug;
         let query = format!("{}", self.query);
         if debug {
-            eprintln!("{}", query);
+            eprintln!("Log Analytics query: {}", query);
         }
         let body = QueryBody {
             query,

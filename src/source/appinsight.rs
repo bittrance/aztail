@@ -45,7 +45,7 @@ impl LogSource for AppInsights {
         let debug = self.opts.debug;
         let query = format!("{}", self.query);
         if debug {
-            eprintln!("{}", query);
+            eprintln!("App Insights query: {}", query);
         }
         let body = QueryBody {
             query,
