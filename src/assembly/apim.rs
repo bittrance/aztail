@@ -80,10 +80,21 @@ fn appinsights_requests_message_line(row: &Map<String, Value>) -> String {
         }
     } else {
         let client_ip = unwrap_as_str(row.get("client_IP"));
-        let method = unwrap_as_str(dimensions.get("HTTP Method"));
-        let measurements: Map<String, Value> =
-            serde_json::from_str(unwrap_as_str(row.get("customMeasurements"))).unwrap();
-        let response_size = measurements.get("Response Size").unwrap();
+        let method = unwrap_as_str(
+            dimensions
+                .get("HTTP Method")
+                .or_else(|| dimensions.get("HttpMethod")),
+        );
+        let response_size = match row.get("customMeasurements") {
+            Some(m) if m.is_string() => {
+                serde_json::from_str::<Map<String, Value>>(m.as_str().unwrap())
+                    .unwrap()
+                    .get("Response Size")
+                    .unwrap()
+                    .clone()
+            }
+            _ => Value::Null,
+        };
         let duration = row.get("duration").unwrap().as_f64().unwrap();
         format!(
             "{} {} \"{}\" {} {} {}",
