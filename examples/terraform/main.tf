@@ -1,6 +1,17 @@
+terraform {
+  required_providers {
+    azapi = {
+      version = "0.3.0"
+      source = "Azure/azapi"
+    }
+  }
+}
+
 provider "azurerm" {
   features {}
 }
+
+provider "azapi" {}
 
 resource "azurerm_resource_group" "rg" {
   name     = "aztail-examples"

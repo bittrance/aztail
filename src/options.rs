@@ -8,8 +8,9 @@ use std::str::FromStr;
 
 #[derive(Debug, PartialEq)]
 pub enum Service {
-    Functions,
     APIManagement,
+    ContainerApps,
+    Functions,
 }
 
 #[derive(Clone, Debug)]
@@ -98,9 +99,13 @@ impl Opts {
         if !(self.function_app.is_empty() && self.function.is_empty()) {
             requested_services.push(Service::Functions);
         }
+        if !(self.container_group.is_empty() && self.container_name.is_empty()) {
+            requested_services.push(Service::ContainerApps);
+        }
         if requested_services.is_empty() {
             requested_services.push(Service::APIManagement);
             requested_services.push(Service::Functions);
+            requested_services.push(Service::ContainerApps);
         }
         requested_services
     }

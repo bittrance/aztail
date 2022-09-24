@@ -1,3 +1,4 @@
 target/
 .terraform
-.terraform.lock.hcl
+.terraform.*
+terraform.tfstate*

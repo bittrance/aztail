@@ -6,6 +6,7 @@ use serde_json::Value;
 use std::iter::empty;
 
 pub mod apim;
+pub mod container_apps;
 pub mod functions;
 
 pub fn unwrap_as_rfc3339(value: Option<&Value>) -> DateTime<FixedOffset> {
@@ -24,5 +25,6 @@ pub fn build_sources(opts: &Opts) -> Vec<Box<dyn LogSource>> {
         .chain(apim::appinsights(opts))
         .chain(functions::opsinsights(opts))
         .chain(functions::appinsights(opts))
+        .chain(container_apps::opsinsights(opts))
         .collect()
 }

@@ -19,6 +19,17 @@ pub fn base_args() -> impl Iterator<Item = &'static str> {
     .into_iter()
 }
 
+pub fn opsinsights_base_args() -> impl Iterator<Item = &'static str> {
+    vec![
+        "aztail",
+        "--workspace",
+        "ze-app",
+        "-s",
+        "2021-10-31T23:50:00+00:00",
+    ]
+    .into_iter()
+}
+
 pub fn log_entry<'a>(timestamp: &'a str) -> LogEntry {
     let mut raw = traces_functions_row();
     raw["timestamp"] = Value::String(timestamp.to_owned());

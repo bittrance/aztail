@@ -66,3 +66,34 @@ pub fn traces_functions_row() -> Map<String, Value> {
     .unwrap()
     .clone()
 }
+
+pub fn container_apps_row() -> Map<String, Value> {
+    json!({
+        "Computer": "",
+        "ContainerAppName_s": "aztail-containerapp",
+        "ContainerGroupId_g": "26d54061-b088-4ad7-a8ca-bae0990785e4",
+        "ContainerGroupName_s": "aztail-containerapp--50rufil-6f767b7c8d-wjnh9",
+        "ContainerId_s": "c7d965c2003bfaac29d132a85ae7d7b23ca2794e2173e4c10e9522c4414a5d12",
+        "ContainerImage_s": "ubuntu:latest",
+        "ContainerName_s": "log-container",
+        "EnvironmentName_s": "proudbay-f42875ce",
+        "Log_s": "Stdout",
+        "MG": "",
+        "ManagementGroupName": "",
+        "RawData": "",
+        "RevisionName_s": "aztail-containerapp--50rufil",
+        "SourceSystem": "RestAPI",
+        "Stream_s": "stdout",
+        "TenantId": "a9d042e7-d348-4f1e-a5b2-fb817144f9d6",
+        "TimeGenerated": "2022-09-25T20:35:43.597Z",
+        "Type": "ContainerAppConsoleLogs_CL",
+        "_ResourceId": "",
+        "_timestamp_d": 1664138142.74275,
+        "logtag_s": "F",
+        "time_s": "",
+        "time_t": "2022-09-25T20:35:42.742Z",
+    })
+    .as_object()
+    .unwrap()
+    .clone()
+}
