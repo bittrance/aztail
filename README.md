@@ -10,6 +10,7 @@ Currently supported Azure services:
 
 - Azure Functions
 - Azure API Management
+- Azure Container Apps
 
 Several more services are in the works: see the [sources](./examples/README.md) page for details on how filters are applied and what data is retrieved.
 
