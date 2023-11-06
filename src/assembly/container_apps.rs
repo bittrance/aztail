@@ -36,7 +36,11 @@ fn opsinsights_container_apps_query(opts: &Opts) -> Query {
 fn container_apps_row_to_entry(row: Map<String, Value>) -> LogEntry {
     let timestamp = unwrap_as_rfc3339(row.get("TimeGenerated"));
     let group = unwrap_as_str(row.get("ContainerAppName_s")).to_owned();
-    let unit = unwrap_as_str(row.get("ContainerName_s")).to_owned();
+    let unit = unwrap_as_str(row.get("ContainerGroupName_s"))
+        .replace(&group, "")
+        .chars()
+        .skip_while(|c| *c == '-')
+        .collect();
     let level = match row.get("Stream_s").unwrap().as_str() {
         Some(s) if s == "stderr" => Level::Error,
         Some(_) => Level::Info,
